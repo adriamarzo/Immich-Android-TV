@@ -3,10 +3,7 @@ package nl.giejay.android.tv.immich.shared.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.CoroutineScope
 import nl.giejay.android.tv.immich.security.ApiKeyCipher
-import nl.giejay.android.tv.immich.slider.FavoriteButtonControllerPlugin
-import nl.giejay.android.tv.immich.slider.FavoriteService
 import nl.giejay.mediaslider.adapter.AlignOption
 import nl.giejay.mediaslider.adapter.MetaDataClock
 import nl.giejay.mediaslider.adapter.MetaDataItem
@@ -192,14 +189,11 @@ object PreferenceManager {
      * [DateOverlayViewPlugin] optionally renders DATE at the top of the slider.
      * [MediaRemoteControlsKeyEventPlugin] handles remote/D-pad seek and related keys.
      */
-    fun createEnabledSliderPlugins(scope: CoroutineScope, favoriteService: FavoriteService): EnabledSliderPlugins {
+    fun createEnabledSliderPlugins(): EnabledSliderPlugins {
         val metadataPlugin = MetadataViewPlugin()
         val remoteControlsPlugin = MediaRemoteControlsKeyEventPlugin()
         return EnabledSliderPlugins(
-            controllerPlugins = listOf(
-                FavoriteButtonControllerPlugin(favoriteService, scope),
-                metadataPlugin
-            ),
+            controllerPlugins = listOf(metadataPlugin),
             viewPlugins = listOf(metadataPlugin, DateOverlayViewPlugin()),
             keyEventPlugins = listOf(remoteControlsPlugin)
         )

@@ -104,7 +104,7 @@ Pass plugins via `MediaSliderConfiguration`:
 ```kotlin
 MediaSliderConfiguration(
     // ...
-    controllerPlugins = listOf(FavoriteButtonControllerPlugin()),
+    controllerPlugins = listOf(MyControllerPlugin()),
     viewPlugins = listOf(MetadataViewPlugin()),
     keyEventPlugins = listOf(MyKeyPlugin())
 )
@@ -115,7 +115,6 @@ MediaSliderConfiguration(
 - `MetadataViewPlugin`: Renders asset metadata (description, date, etc.).
 - `DateOverlayViewPlugin`: Optional top-of-screen DATE overlay with a dark scrim (`MediaSliderConfiguration.showDateTopLeft`). Bottom DATE metadata is unchanged.
 - `MediaRemoteControlsKeyEventPlugin`: Remote FF/RW tap-vs-hold seek, photo play/pause slideshow, opt-in D-pad seek, Back exits slideshow without pausing.
-- `FavoriteButtonControllerPlugin`: Adds a toggle for favoriting assets.
 - `TimelineStoryProgressPlugin`: Renders a segment-based progress bar (IG/Snapchat style) and manages slideshow timing.
 - `TopRightSlotViewPlugin`: Provides a container in the top-right corner for custom overlays.
 

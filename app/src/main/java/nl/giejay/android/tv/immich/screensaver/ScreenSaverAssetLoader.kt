@@ -39,7 +39,6 @@ import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_EFFECT
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_SCROLL_PANORAMAS
 import nl.giejay.android.tv.immich.shared.util.Utils.pmap
 import nl.giejay.android.tv.immich.shared.util.toSliderItems
-import nl.giejay.android.tv.immich.slider.FavoriteService
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.util.LoadMore
 import nl.giejay.mediaslider.util.LoadMoreResult
@@ -69,10 +68,9 @@ internal fun screenSaverApiClientConfig(): ApiClientConfig =
 internal fun buildScreenSaverConfiguration(
     assets: List<Asset>,
     loadMore: LoadMore?,
-    scope: CoroutineScope,
-    favoriteService: FavoriteService
+    scope: CoroutineScope
 ): MediaSliderConfiguration {
-    val enabledPlugins = PreferenceManager.createEnabledSliderPlugins(scope, favoriteService)
+    val enabledPlugins = PreferenceManager.createEnabledSliderPlugins()
     return MediaSliderConfiguration(
         0,
         PreferenceManager.get(SCREENSAVER_INTERVAL),
@@ -109,8 +107,7 @@ internal fun buildScreenSaverConfiguration(
 class ScreenSaverAssetLoader(
     private val scope: CoroutineScope,
     private val apiClient: ApiClient,
-    private val host: Host,
-    private val favoriteService: FavoriteService = FavoriteService()
+    private val host: Host
 ) {
     interface Host {
         /** Host resolves [messageRes] against its own Context and shows a toast. */
@@ -265,7 +262,7 @@ class ScreenSaverAssetLoader(
             }
         } else {
             host.onScreenSaverConfigurationReady(
-                buildScreenSaverConfiguration(assets, loadMore, scope, favoriteService)
+                buildScreenSaverConfiguration(assets, loadMore, scope)
             )
         }
     }

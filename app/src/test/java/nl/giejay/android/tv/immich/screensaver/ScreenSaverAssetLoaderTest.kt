@@ -24,7 +24,6 @@ import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.android.tv.immich.shared.prefs.Pref
 import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_ALBUMS
 import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_TYPE
-import nl.giejay.android.tv.immich.slider.FavoriteService
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.plugin.MediaRemoteControlsKeyEventPlugin
 import org.junit.After
@@ -279,12 +278,10 @@ class ScreenSaverAssetLoaderTest {
         setupMocks(apiClient)
 
         val host = mock<ScreenSaverAssetLoader.Host>()
-        val favoriteService = mock<FavoriteService>()
         val loader = ScreenSaverAssetLoader(
             scope = this,
             apiClient = apiClient,
-            host = host,
-            favoriteService = favoriteService
+            host = host
         )
 
         mockConstruction(MediaRemoteControlsKeyEventPlugin::class.java).use {

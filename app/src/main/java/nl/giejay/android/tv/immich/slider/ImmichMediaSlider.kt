@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.navigation.fragment.findNavController
 import nl.giejay.android.tv.immich.R
@@ -18,8 +17,6 @@ import nl.giejay.mediaslider.view.MediaSliderView
 import timber.log.Timber
 
 class ImmichMediaSlider : MediaSliderFragment() {
-    private val favoriteService = FavoriteService()
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -55,7 +52,7 @@ class ImmichMediaSlider : MediaSliderFragment() {
             config.keyEventPlugins += timelinePlugin
         }
 
-        val enabledPlugins = PreferenceManager.createEnabledSliderPlugins(lifecycleScope, favoriteService)
+        val enabledPlugins = PreferenceManager.createEnabledSliderPlugins()
         config.controllerPlugins += enabledPlugins.controllerPlugins
         config.viewPlugins += enabledPlugins.viewPlugins
         config.keyEventPlugins += enabledPlugins.keyEventPlugins

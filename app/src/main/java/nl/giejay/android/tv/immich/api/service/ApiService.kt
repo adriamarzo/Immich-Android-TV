@@ -8,11 +8,9 @@ import nl.giejay.android.tv.immich.api.model.SearchRequest
 import nl.giejay.android.tv.immich.api.model.SearchResponse
 import nl.giejay.android.tv.immich.api.model.TimeBucketAssetsResponse
 import nl.giejay.android.tv.immich.api.model.TimeBucketSummary
-import nl.giejay.android.tv.immich.api.model.UpdateAssetRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.PUT
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -36,9 +34,6 @@ interface ApiService {
 
     @GET("people")
     suspend fun listPeople(): Response<PeopleResponse>
-
-    @PUT("assets/{id}")
-    suspend fun updateAsset(@Path("id") id: String, @Body request: UpdateAssetRequest): Response<Asset>
 
     // VIS-02: default visibility=timeline excludes hidden/archived assets, matching listAssets.
     @GET("timeline/buckets")
