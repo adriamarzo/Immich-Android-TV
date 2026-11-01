@@ -10,7 +10,7 @@ plugins {
 android {
     compileSdk = 37
     defaultConfig {
-        applicationId "nl.giejay.android.tv.immich"
+        applicationId "io.github.adriamarzo.immichtv"
         minSdkVersion 24
         targetSdkVersion 37
         versionCode 148

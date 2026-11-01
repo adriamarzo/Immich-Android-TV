@@ -46,25 +46,54 @@ include:
 
 ## Required API Permissions
 
-When setting up your API key in Immich, make sure to grant the following permissions for the app to function properly:
+Create a dedicated API key in Immich and grant it exactly these permissions, and nothing else:
 
-- `activity.read` - Read activity data
-- `album.download` - Download album content
-- `album.read` - Read album information
-- `archive.read` - Read archived items
-- `asset.download` - Download assets for viewing
-- `asset.read` - Read asset metadata
-- `asset.view` - View assets (photos/videos)
-- `face.read` - Read face detection data
-- `folder.read` - Read folder information
-- `library.read` - Read library information
-- `memory.read` - Read memory/moment data
-- `partner.read` - Read partner sharing data
-- `person.read` - Read person/people data
-- `session.read` - Read session information
-- `tag.asset` - Read asset tag associations
-- `tag.read` - Read tag information
-- `timeline.read` - Read timeline data
+- `asset.read`
+- `asset.view`
+- `asset.download`
+- `album.read`
+- `person.read`
+- `memory.read`
+- `folder.read`
+- `timeline.read`
+
+Never use the `all` permission. The app only reads from the server, so a read-only key limits the damage if the key ever leaks.
+
+To check that a key really is read-only, run `scripts/verify-readonly-key.sh`. It asks for the server URL and the key
+interactively (the key is never passed as an argument or printed), and reports PASS or FAIL for each check.
+
+## Building a release
+
+Gradle is only run through the Docker wrapper, never directly on the host.
+
+1. Generate a signing key outside the repository and keep it safe (if you lose it you cannot update the app).
+   The wrapper mounts `~/.cache/immich-build` as `/work` in the container, so keep the key there:
+
+   ```bash
+   mkdir -p ~/.cache/immich-build
+   keytool -genkeypair -v -keystore ~/.cache/immich-build/release.jks -alias immich \
+     -keyalg RSA -keysize 4096 -validity 10000
+   ```
+
+2. Build, passing the signing settings through the `RELEASE_*` variables (paths are as seen inside the container;
+   the passwords are read from the prompt, not typed on the command line):
+
+   ```bash
+   export RELEASE_KEYSTORE_PATH=/work/release.jks RELEASE_KEY_ALIAS=immich
+   read -s "RELEASE_KEYSTORE_PASSWORD?Store password: "; export RELEASE_KEYSTORE_PASSWORD   # zsh; in bash: read -s -p ...
+   export RELEASE_KEY_PASSWORD="$RELEASE_KEYSTORE_PASSWORD"
+   scripts/docker-gradle.sh assembleRelease
+   ```
+
+   The APK is written to `~/.cache/immich-build/src/app/build/outputs/apk/release/`. Without the `RELEASE_*`
+   variables the wrapper signs with a throwaway key, which is fine for testing only.
+
+Keystores (`*.jks`, `*.keystore`) are git-ignored; never commit them.
+
+## Credits and license
+
+This is a fork of [giejay/Immich-Android-TV](https://github.com/giejay/Immich-Android-TV); all credit for the original
+project goes to its author. It is released under the GPL-3 license, the same as the original.
 
 ## Screenshots
 
@@ -103,5 +132,5 @@ might consider buying me a coffee or a beer:
    192.168.xx.xx.
 5. If you have an Amazon Fire TV, first execute this command and reboot after: 'adb shell settings put secure amazon_ambient_enabled 0'
 6. Execute the following command: 'adb shell settings put secure
-   screensaver_components nl.giejay.android.tv.immich/.screensaver.ScreenSaverService'
+   screensaver_components io.github.adriamarzo.immichtv/nl.giejay.android.tv.immich.screensaver.ScreenSaverService'
 7. Done!
