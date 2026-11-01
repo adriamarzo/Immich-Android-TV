@@ -3,7 +3,13 @@ package nl.giejay.android.tv.immich.shared.util
 import nl.giejay.mediaslider.model.SliderItem
 import nl.giejay.mediaslider.model.SliderItemType
 import nl.giejay.mediaslider.model.SliderItemViewHolder
+import arrow.core.getOrElse
+import nl.giejay.android.tv.immich.api.ApiClient
+import nl.giejay.android.tv.immich.api.MAX_SEARCH_PAGE_SIZE
+import nl.giejay.android.tv.immich.api.model.AssetResponse
 import nl.giejay.android.tv.immich.api.util.ApiUtil
+import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
+import nl.giejay.android.tv.immich.shared.util.Utils.pmap
 import nl.giejay.android.tv.immich.api.model.Asset
 import nl.giejay.android.tv.immich.card.Card
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
@@ -152,5 +158,20 @@ fun Asset.toCard(): Card {
         this.exifInfo?.description ?: "",
         this.id,
         ApiUtil.getThumbnailUrl(this.id, "thumbnail"),
-        ApiUtil.getThumbnailUrl(this.id, "preview"))
+        ApiUtil.getThumbnailUrl(this.id, "preview"),
+        isVideo = this.type.equals("VIDEO", ignoreCase = true))
+}
+
+fun Asset.isHiddenByTag(): Boolean =
+    tags?.any { t -> t.name == "exclude_immich_tv" } ?: false
+
+suspend fun loadExcludedAssetIds(apiClient: ApiClient): Set<String> {
+    val excludedAlbums = PreferenceManager.get(EXCLUDE_ASSETS_IN_ALBUM)
+    if (excludedAlbums.isEmpty()) return emptySet()
+    return excludedAlbums.toList().pmap {
+        apiClient.listAssetsFromAlbum(listOf(it), pageCount = MAX_SEARCH_PAGE_SIZE)
+            .getOrElse { AssetResponse(emptyList(), false) }
+            .assets
+            .map { it -> it.id }
+    }.flatten().toSet()
 }

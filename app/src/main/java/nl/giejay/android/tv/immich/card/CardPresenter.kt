@@ -23,6 +23,9 @@ open class CardPresenter(context: Context, style: Int = R.style.DefaultCardTheme
             cardView.contentText = card.description
         }
         setSelected(cardView, card.selected)
+        cardView.badgeImage = if ((card as? Card)?.isVideo == true) {
+            context.getDrawable(R.drawable.ic_video_badge_play)
+        } else null
     }
 
     override fun onUnbindViewHolder(viewHolder: ViewHolder) {

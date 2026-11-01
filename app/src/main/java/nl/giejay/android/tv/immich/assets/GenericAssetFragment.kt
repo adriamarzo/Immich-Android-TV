@@ -6,44 +6,27 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import arrow.core.Either
-import arrow.core.getOrElse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.giejay.android.tv.immich.album.AlbumDetailsFragmentDirections
-import nl.giejay.android.tv.immich.api.MAX_SEARCH_PAGE_SIZE
 import nl.giejay.android.tv.immich.api.model.Asset
-import nl.giejay.android.tv.immich.api.model.AssetResponse
 import nl.giejay.android.tv.immich.api.util.ApiUtil
 import nl.giejay.android.tv.immich.card.Card
 import nl.giejay.android.tv.immich.home.HomeFragmentDirections
 import nl.giejay.android.tv.immich.shared.fragment.VerticalCardGridFragment
 import nl.giejay.android.tv.immich.shared.prefs.ALL_ASSETS_SORTING
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
-import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.EnumByTitlePref
 import nl.giejay.android.tv.immich.shared.prefs.FILTER_CONTENT_TYPE
-import nl.giejay.android.tv.immich.shared.prefs.MetaDataScreen
 import nl.giejay.android.tv.immich.shared.prefs.PhotosOrder
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
-import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_ANIMATE_ASSET_SLIDE
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ANIMATION_SPEED
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_FORCE_ORIGINAL_VIDEO
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_GLIDE_TRANSFORMATION
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_INTERVAL
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_DPAD_SEEK_IN_VIDEO
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_MAX_CUT_OFF_HEIGHT
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_MAX_CUT_OFF_WIDTH
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_MERGE_PORTRAIT_PHOTOS
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ONLY_USE_THUMBNAILS
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_PAN_EFFECT
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_SHOW_DATE_TOP_LEFT
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_EFFECT
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_SCROLL_PANORAMAS
-import nl.giejay.android.tv.immich.shared.util.Utils.pmap
+import nl.giejay.android.tv.immich.shared.util.buildViewerConfiguration
+import nl.giejay.android.tv.immich.shared.util.isHiddenByTag
+import nl.giejay.android.tv.immich.shared.util.loadExcludedAssetIds
 import nl.giejay.android.tv.immich.shared.util.toCard
 import nl.giejay.android.tv.immich.shared.util.toSliderItems
-import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.util.LoadMore
 import nl.giejay.mediaslider.util.LoadMoreResult
 import nl.giejay.mediaslider.viewmodel.MediaSliderViewModel
@@ -78,21 +61,11 @@ abstract class GenericAssetFragment : VerticalCardGridFragment<Asset>() {
             .filterNot { excludedAssetIds.contains(it.id) }
     }
 
-    private fun excludeByTag() = { asset: Asset ->
-        asset.tags?.none { t -> t.name == "exclude_immich_tv" } ?: true
-    }
+    private fun excludeByTag() = { asset: Asset -> !asset.isHiddenByTag() }
 
     override suspend fun loadData(): Either<String, List<Asset>> {
         if (!excludedAssetsLoaded) {
-            val excludedAlbums = PreferenceManager.get(EXCLUDE_ASSETS_IN_ALBUM)
-            if (excludedAlbums.isNotEmpty()) {
-                excludedAssetIds = excludedAlbums.toList().pmap {
-                    apiClient.listAssetsFromAlbum(listOf(it), pageCount = MAX_SEARCH_PAGE_SIZE)
-                        .getOrElse { AssetResponse(emptyList(), false) }
-                        .assets
-                        .map { it -> it.id }
-                }.flatten().toSet()
-            }
+            excludedAssetIds = loadExcludedAssetIds(apiClient)
             excludedAssetsLoaded = true
         }
         return super.loadData()
@@ -151,28 +124,11 @@ abstract class GenericAssetFragment : VerticalCardGridFragment<Asset>() {
             withContext(Dispatchers.Main) {
                 if (!isAdded) return@withContext
                 progressBar?.visibility = View.GONE
-                val config = MediaSliderConfiguration(
-                    toSliderItems.indexOfFirst { it.ids().contains(card.id) },
-                    PreferenceManager.get(SLIDER_INTERVAL),
-                    PreferenceManager.get(SLIDER_ONLY_USE_THUMBNAILS),
-                    isVideoSoundEnable = true,
+                val config = buildViewerConfiguration(
                     toSliderItems,
-                    loadMore,
-                    { item -> manualUpdatePosition(this@GenericAssetFragment.assets.indexOfFirst { item.ids().contains(it.id) }) },
-                    animationSpeedMillis = PreferenceManager.get(SLIDER_ANIMATION_SPEED),
-                    maxCutOffHeight = PreferenceManager.get(SLIDER_MAX_CUT_OFF_HEIGHT),
-                    maxCutOffWidth = PreferenceManager.get(SLIDER_MAX_CUT_OFF_WIDTH),
-                    glideTransformation = PreferenceManager.get(SLIDER_GLIDE_TRANSFORMATION),
-                    enableSlideAnimation = PreferenceManager.get(SCREENSAVER_ANIMATE_ASSET_SLIDE),
-                    gradiantOverlay = false,
-                    metaDataConfig = PreferenceManager.getAllMetaData(MetaDataScreen.VIEWER),
-                    zoomAndScrollPanorama = PreferenceManager.get(SLIDER_ZOOM_SCROLL_PANORAMAS),
-                    zoomEffectPercent = PreferenceManager.get(SLIDER_ZOOM_EFFECT),
-                    panEffectPercent = PreferenceManager.get(SLIDER_PAN_EFFECT),
-                    useLargeVideoBuffer = PreferenceManager.get(SLIDER_FORCE_ORIGINAL_VIDEO),
-                    dpadSeeksInVideo = PreferenceManager.get(SLIDER_DPAD_SEEK_IN_VIDEO),
-                    showDateTopLeft = PreferenceManager.get(SLIDER_SHOW_DATE_TOP_LEFT)
-                )
+                    card.id,
+                    loadMore
+                ) { item -> manualUpdatePosition(this@GenericAssetFragment.assets.indexOfFirst { item.ids().contains(it.id) }) }
                 sliderViewModel.configuration = config
                 findNavController().navigate(AlbumDetailsFragmentDirections.actionToPhotoSlider())
             }
