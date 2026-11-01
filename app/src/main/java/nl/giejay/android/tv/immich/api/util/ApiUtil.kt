@@ -28,24 +28,16 @@ object ApiUtil {
     }
 
     fun getFileUrl(assetId: String?, type: String, forceOriginal: Boolean = false, loadEdited: Boolean = false): String? {
-        if(forceOriginal){
-            return assetId?.let {
-                // api key is added here if the user wants to open a video in an external video player, since the external player will not have access to the api key otherwise
-                "${hostName().lowercase()}/api/assets/${it}/original?apiKey=${PreferenceManager.get(API_KEY)}"
-            }
-        }
-        return when (type) {
-            "VIDEO" ->
-                assetId?.let {
-                    // api key is added here if the user wants to open a video in an external video player, since the external player will not have access to the api key otherwise
-                    "${hostName().lowercase()}/api/assets/${it}/video/playback?apiKey=${PreferenceManager.get(API_KEY)}"
-                }
+        return assetId?.let { buildFileUrl(hostName(), it, type, forceOriginal, loadEdited) }
+    }
 
-            else ->
-                assetId?.let {
-                    "${hostName().lowercase()}/api/assets/${it}/original?edited=${loadEdited}"
-                }
-
+    // The API key never goes in these URLs: Glide and ExoPlayer send it as the x-api-key header.
+    internal fun buildFileUrl(host: String, assetId: String, type: String, forceOriginal: Boolean, loadEdited: Boolean): String {
+        val base = "${host.lowercase()}/api/assets/$assetId"
+        return when {
+            forceOriginal -> "$base/original"
+            type == "VIDEO" -> "$base/video/playback"
+            else -> "$base/original?edited=$loadEdited"
         }
     }
 

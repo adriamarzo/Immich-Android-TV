@@ -19,8 +19,6 @@
 
     <!-- Access internet-based media -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Donation -->
-    <uses-permission android:name="com.android.vending.BILLING" />
 
     <!-- For writing to home screen channels -->
     <uses-permission android:name="com.android.providers.tv.permission.WRITE_EPG_DATA" />
@@ -39,11 +37,11 @@
 
     <application
         android:name="nl.giejay.android.tv.immich.ImmichApplication"
-        android:allowBackup="true"
-        android:fullBackupContent="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@drawable/icon"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="false"
         android:largeHeap="true"
         android:hardwareAccelerated="true"
         android:banner="@mipmap/icon_banner_v2"
@@ -51,8 +49,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- Runs before Application.onCreate() and before any other provider with a lower
-             initOrder (FirebaseInitProvider is at 100, this is set higher so it always wins). -->
+        <!-- Runs before Application.onCreate() and before any other provider with a lower initOrder. -->
         <provider
             android:name="nl.giejay.android.tv.immich.AppContextInitializer"
             android:authorities="${applicationId}.appcontextinitializer"

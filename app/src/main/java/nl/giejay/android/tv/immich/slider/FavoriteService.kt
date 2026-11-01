@@ -10,7 +10,6 @@ import nl.giejay.android.tv.immich.api.ApiClient
 import nl.giejay.android.tv.immich.api.ApiClientConfig
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
-import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import timber.log.Timber
 
@@ -20,7 +19,6 @@ class FavoriteService(
             ApiClientConfig(
                 PreferenceManager.hostName,
                 PreferenceManager.get(API_KEY),
-                PreferenceManager.get(DISABLE_SSL_VERIFICATION),
                 PreferenceManager.get(DEBUG_MODE)
             )
         ).updateFavorite(assetId, isFavorite).map { }

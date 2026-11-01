@@ -17,7 +17,6 @@ import nl.giejay.android.tv.immich.api.model.AssetResponse
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
-import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.MetaDataScreen
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
@@ -60,7 +59,6 @@ internal fun screenSaverApiClientConfig(): ApiClientConfig =
     ApiClientConfig(
         PreferenceManager.hostName,
         PreferenceManager.get(API_KEY),
-        PreferenceManager.get(DISABLE_SSL_VERIFICATION),
         PreferenceManager.get(DEBUG_MODE)
     )
 

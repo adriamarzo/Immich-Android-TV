@@ -22,7 +22,6 @@ import nl.giejay.android.tv.immich.api.util.ApiUtil.executeAPICall
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
-import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.android.tv.immich.shared.prefs.RECENT_ASSETS_MONTHS_BACK
@@ -42,14 +41,12 @@ import java.util.UUID
 data class ApiClientConfig(
     val hostName: String,
     val apiKey: String,
-    val disableSslVerification: Boolean,
     val debugMode: Boolean
 ) {
     companion object {
         fun fromPrefs(): ApiClientConfig = ApiClientConfig(
             PreferenceManager.hostName,
             PreferenceManager.get(API_KEY),
-            PreferenceManager.get(DISABLE_SSL_VERIFICATION),
             PreferenceManager.get(DEBUG_MODE)
         )
     }
@@ -113,7 +110,7 @@ class ApiClient(private val config: ApiClientConfig) {
     }
 
     private val retrofit = Retrofit.Builder()
-        .client(ApiClientFactory.getClient(config.disableSslVerification, config.apiKey, config.debugMode))
+        .client(ApiClientFactory.getClient(config.apiKey, config.debugMode) { config.hostName })
         .addConverterFactory(GsonConverterFactory.create())
         .baseUrl("${config.hostName}/api/")
         .build()

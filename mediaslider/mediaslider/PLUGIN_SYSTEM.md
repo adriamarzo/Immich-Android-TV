@@ -116,7 +116,6 @@ MediaSliderConfiguration(
 - `DateOverlayViewPlugin`: Optional top-of-screen DATE overlay with a dark scrim (`MediaSliderConfiguration.showDateTopLeft`). Bottom DATE metadata is unchanged.
 - `MediaRemoteControlsKeyEventPlugin`: Remote FF/RW tap-vs-hold seek, photo play/pause slideshow, opt-in D-pad seek, Back exits slideshow without pausing.
 - `FavoriteButtonControllerPlugin`: Adds a toggle for favoriting assets.
-- `ExternalPlayerButtonControllerPlugin`: Adds a button to open videos in an external player.
 - `TimelineStoryProgressPlugin`: Renders a segment-based progress bar (IG/Snapchat style) and manages slideshow timing.
 - `TopRightSlotViewPlugin`: Provides a container in the top-right corner for custom overlays.
 

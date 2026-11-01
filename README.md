@@ -23,9 +23,7 @@ include:
 
 | Features                                                                       | Status       |
 |:-------------------------------------------------------------------------------|--------------|
-| Sign in by phone (https://github.com/giejay/Immich-Android-TV-Authentication)  | Done         |
 | Sign in by entering API key                                                    | Done         |
-| Demo environment                                                               | Done         |
 | Album fetching + Lazy loading                                                  | Done         |
 | Showing the photos inside an album                                             | Done         |
 | Showing people, random, recent or seasonal photos                              | Done         |
@@ -78,12 +76,8 @@ When setting up your API key in Immich, make sure to grant the following permiss
 
 ## Build steps
 
-1. Clone project with `git clone --recurse git@github.com:giejay/Immich-Android-TV.git`
-2. Create an account at firebase and create a google-services.json file, or
-   `cp app/google-services.example app/google-services.json`
-3. copy app/strings_other.xml.example to app/src/main/res/values/strings_other.xml and modify
-   the address and API keys for your demo server.
-4. Build apk with `./gradlew assembleRelease`
+1. Clone the project
+2. Build apk with `./gradlew assembleRelease`
 
 ## Support the project
 

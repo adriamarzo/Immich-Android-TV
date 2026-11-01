@@ -212,7 +212,6 @@
     <string name="home_screen_channels_settings">主屏幕频道设置</string>
     <string name="channel_recent_photos">最近照片</string>
     <string name="enable_home_screen_channels">在主屏幕上显示频道</string>
-    <string name="enable_home_screen_channels_desc">将你最近的照片以及下方选择的相册发布为 Android TV 主屏幕上的频道</string>
     <string name="set_albums_home_screen_channels">选择要发布为频道的相册</string>
     <string name="set_albums_home_screen_channels_desc">每个选中的相册都会作为独立的一行显示在 Android TV 主屏幕上</string>
     <string name="home_screen_channels_refresh_now">立即刷新</string>
@@ -228,8 +227,8 @@
     <string name="auth_demo_mode_desc">登录 Immich 演示服务器。</string>
 
     <!-- Auth step 2 (GuidedStep) -->
-    <string name="login_immich_description">登录你的 Immich 服务器，或试用演示。</string>
-    <string name="server_url_hint">服务器地址（http[s]://…）</string>
+    <string name="login_immich_description">登录你的 Immich 服务器。</string>
+    <string name="server_url_hint">服务器地址（https://…）</string>
     <string name="disable_ssl_verification">关闭 SSL 校验</string>
     <string name="disable_ssl_verification_desc">仅在自签名证书出现问题时使用！</string>
     <string name="debug_mode">调试模式</string>

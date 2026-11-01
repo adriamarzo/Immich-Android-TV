@@ -219,8 +219,8 @@
     <string name="auth_demo_mode_desc">Se connecter à une instance Immich de démonstration.</string>
 
     <!-- Auth step 2 (GuidedStep) -->
-    <string name="login_immich_description">Connectez-vous à votre serveur Immich ou essayez une démo.</string>
-    <string name="server_url_hint">URL du serveur (http[s]://…)</string>
+    <string name="login_immich_description">Connectez-vous à votre serveur Immich.</string>
+    <string name="server_url_hint">URL du serveur (https://…)</string>
     <string name="disable_ssl_verification">Désactiver la vérification SSL</string>
     <string name="disable_ssl_verification_desc">À utiliser uniquement si vous rencontrez des problèmes avec des certificats autosignés !</string>
     <string name="debug_mode">Mode débogage</string>

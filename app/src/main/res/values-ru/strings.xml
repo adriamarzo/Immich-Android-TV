@@ -220,8 +220,8 @@
     <string name="auth_demo_mode_desc">Войти в демонстрационный экземпляр Immich.</string>
 
     <!-- Auth step 2 (GuidedStep) -->
-    <string name="login_immich_description">Войдите на ваш сервер Immich или попробуйте демо.</string>
-    <string name="server_url_hint">URL сервера (http[s]://…)</string>
+    <string name="login_immich_description">Войдите на ваш сервер Immich.</string>
+    <string name="server_url_hint">URL сервера (https://…)</string>
     <string name="disable_ssl_verification">Отключить проверку SSL</string>
     <string name="disable_ssl_verification_desc">Используйте это только при проблемах с самоподписанными сертификатами!</string>
     <string name="debug_mode">Режим отладки</string>

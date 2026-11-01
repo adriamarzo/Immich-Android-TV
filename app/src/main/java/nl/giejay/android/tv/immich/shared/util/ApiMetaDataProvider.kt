@@ -13,7 +13,6 @@ import nl.giejay.android.tv.immich.api.ApiClientConfig
 import nl.giejay.android.tv.immich.api.model.Asset
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
-import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.mediaslider.model.MetaDataProvider
 import nl.giejay.mediaslider.model.MetaDataType
@@ -25,7 +24,6 @@ class AlbumMetaDataProvider(private val assetId: String) : MetaDataProvider {
             ApiClientConfig(
                 PreferenceManager.hostName,
                 PreferenceManager.get(API_KEY),
-                PreferenceManager.get(DISABLE_SSL_VERIFICATION),
                 PreferenceManager.get(DEBUG_MODE)
             )
         ).listAlbums(Option.invoke(assetId)).map { albums ->
@@ -82,7 +80,6 @@ object AssetDetailCache {
             ApiClientConfig(
                 PreferenceManager.hostName,
                 PreferenceManager.get(API_KEY),
-                PreferenceManager.get(DISABLE_SSL_VERIFICATION),
                 PreferenceManager.get(DEBUG_MODE)
             )
         )

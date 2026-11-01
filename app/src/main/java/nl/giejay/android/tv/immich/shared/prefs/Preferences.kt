@@ -13,8 +13,6 @@ import android.widget.Toast
 import androidx.navigation.NavController
 import androidx.preference.ListPreference
 import androidx.preference.Preference
-import com.github.alexzhirkevich.customqrgenerator.QrData
-import com.github.alexzhirkevich.customqrgenerator.vector.QrCodeDrawable
 import nl.giejay.android.tv.immich.ImmichApplication
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.album.AlbumFragmentDirections
@@ -25,12 +23,6 @@ import nl.giejay.android.tv.immich.security.ApiKeyCipher
 import nl.giejay.mediaslider.transformations.GlideTransformations
 
 // general
-data object DISABLE_SSL_VERIFICATION : BooleanPref(false,
-    ImmichApplication.appContext!!.getString(R.string.disable_ssl),
-    ImmichApplication.appContext!!.getString(R.string.disable_ssl_text)) {
-    override fun key() = "disableSSLVerification"
-}
-
 data object API_KEY : StringPref("",
     ImmichApplication.appContext!!.getString(R.string.api_key_text),
     ImmichApplication.appContext!!.getString(R.string.api_key_text)) {
@@ -204,7 +196,7 @@ data object SCREENSAVER_TYPE : EnumByTitlePref<ScreenSaverType>(ScreenSaverType.
 }
 
 // home screen channels
-data object ENABLE_HOME_SCREEN_CHANNELS : BooleanPref(true,
+data object ENABLE_HOME_SCREEN_CHANNELS : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.enable_home_screen_channels),
     ImmichApplication.appContext!!.getString(R.string.enable_home_screen_channels_desc))
 
@@ -446,38 +438,6 @@ data object LOAD_BACKGROUND_IMAGE : BooleanPref(true,
 
 data object HIDDEN_HOME_ITEMS : StringSetPref(emptySet(), "", "")
 
-data object USER_ID : ActionPref(null, ImmichApplication.appContext!!.getString(R.string.user_id),
-    ImmichApplication.appContext!!.getString(R.string.user_id_desc),
-    { context, _ ->
-        val userId = PreferenceManager.get(USER_ID)
-        if (userId.isNotEmpty()) {
-            val layoutInflater = LayoutInflater.from(context)
-            val view = layoutInflater.inflate(R.layout.dialog_user_id_qr, null)
-            val qrImageView = view.findViewById<ImageView>(R.id.qrCode)
-            val userIdTextView = view.findViewById<TextView>(R.id.userIdText)
-
-            userIdTextView.text = userId
-            val data = QrData.Text(userId)
-            qrImageView.setImageDrawable(QrCodeDrawable(data))
-
-            AlertDialog.Builder(context)
-                .setView(view)
-                .setPositiveButton(R.string.close) { dialog, _ -> dialog.dismiss() }
-                .show()
-        }
-        true
-    }) {
-    override fun key() = "user_id"
-
-    override fun getValue(sharedPreferences: SharedPreferences): String {
-        return sharedPreferences.getString(key(), "") ?: ""
-    }
-
-    override fun save(sharedPreferences: SharedPreferences, value: String) {
-        sharedPreferences.edit().putString(key(), value).apply()
-    }
-}
-
 // seasonal/random/recents
 data object SIMILAR_ASSETS_YEARS_BACK : IntListPref(10,
     ImmichApplication.appContext!!.getString(R.string.seasonal_photos_years_back),
@@ -643,9 +603,7 @@ data object HomeScreenChannelsPrefScreen : PrefScreen(ImmichApplication.appConte
 )
 
 data object DebugPrefScreen : PrefScreen(ImmichApplication.appContext!!.getString(R.string.debug_settings), "debug",
-    children = listOf(PrefCategory("", listOf(DEBUG_MODE, USER_ID))), { prefManager ->
-        prefManager.findPreference<Preference>(USER_ID.key())?.summary = PreferenceManager.get(USER_ID)
-    })
+    children = listOf(PrefCategory("", listOf(DEBUG_MODE))))
 
 data class AlbumDetailsSettingsScreen(val albumId: String,
                                       val albumName: String) : PrefScreen(ImmichApplication.appContext!!.getString(R.string.settings_for, albumName),

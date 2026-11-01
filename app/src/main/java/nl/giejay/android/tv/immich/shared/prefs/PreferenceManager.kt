@@ -14,7 +14,6 @@ import nl.giejay.mediaslider.adapter.MetaDataMediaCount
 import nl.giejay.mediaslider.adapter.MetaDataSliderItem
 import nl.giejay.mediaslider.model.MetaDataType
 import nl.giejay.mediaslider.plugin.DateOverlayViewPlugin
-import nl.giejay.mediaslider.plugin.ExternalPlayerButtonControllerPlugin
 import nl.giejay.mediaslider.plugin.MediaRemoteControlsKeyEventPlugin
 import nl.giejay.mediaslider.plugin.MetadataViewPlugin
 import nl.giejay.mediaslider.plugin.SliderControllerPlugin
@@ -94,7 +93,7 @@ object PreferenceManager {
     }
 
     fun isValid(hostName: String?, apiKey: String?): Boolean {
-        return hostName?.isNotBlank() == true && apiKey?.isNotBlank() == true && hostName.toHttpUrlOrNull() != null
+        return apiKey?.isNotBlank() == true && hostName?.toHttpUrlOrNull()?.isHttps == true
     }
 
     fun removeApiSettings() {
@@ -199,7 +198,6 @@ object PreferenceManager {
         return EnabledSliderPlugins(
             controllerPlugins = listOf(
                 FavoriteButtonControllerPlugin(favoriteService, scope),
-                ExternalPlayerButtonControllerPlugin(),
                 metadataPlugin
             ),
             viewPlugins = listOf(metadataPlugin, DateOverlayViewPlugin()),

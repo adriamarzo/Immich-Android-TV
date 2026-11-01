@@ -17,17 +17,12 @@ package nl.giejay.android.tv.immich
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import nl.giejay.android.tv.immich.homescreenchannels.HomeScreenChannelManager
-import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
-import nl.giejay.android.tv.immich.shared.prefs.USER_ID
 import timber.log.Timber
-import java.util.UUID
 
 
 /**
@@ -38,23 +33,15 @@ class ImmichApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // AppContextInitializer (initOrder set higher than Firebase's) sets this first;
+        // AppContextInitializer (maximum initOrder) sets this first;
         // kept as a cheap no-op for direct Application construction.
         appContext = this
         PreferenceManager.init(this)
 
+        // Release builds plant no tree on purpose: nothing is logged or sent off the device.
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
-        } else {
-            Timber.plant(CrashReportingTree())
         }
-
-        var userId = PreferenceManager.get(USER_ID)
-        if(userId.isBlank()){
-            userId = UUID.randomUUID().toString()
-            PreferenceManager.save(USER_ID, userId)
-        }
-        FirebaseCrashlytics.getInstance().setUserId(userId)
 
         HomeScreenChannelManager.initSubscriptions()
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -66,21 +53,5 @@ class ImmichApplication : Application() {
 
     companion object {
         var appContext: Context? = null
-    }
-
-    private class CrashReportingTree : Timber.Tree() {
-        val instance = FirebaseCrashlytics.getInstance()
-
-        override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-            if (priority == Log.VERBOSE || (priority == Log.DEBUG && !PreferenceManager.get(DEBUG_MODE))) {
-                return
-            }
-            instance.log("$tag : $message")
-            if (t != null) {
-                instance.recordException(t)
-            } else if (priority == Log.ERROR) {
-                instance.recordException(UnknownError(message))
-            }
-        }
     }
 }

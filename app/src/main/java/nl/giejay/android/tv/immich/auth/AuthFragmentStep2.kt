@@ -16,7 +16,6 @@ import nl.giejay.android.tv.immich.shared.guidedstep.GuidedStepUtil.addCheckedAc
 import nl.giejay.android.tv.immich.shared.guidedstep.GuidedStepUtil.addEditableAction
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
-import nl.giejay.android.tv.immich.shared.prefs.DISABLE_SSL_VERIFICATION
 import nl.giejay.android.tv.immich.shared.prefs.HOST_NAME
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_ALBUMS
@@ -32,7 +31,6 @@ data class AuthSettings(val hostName: String, val apiKey: String) {
 class AuthFragmentStep2 : GuidedStepSupportFragment() {
     private val ACTION_NAME = 0L
     private val ACTION_API_KEY = 1L
-    private val ACTION_CHECK_CERTS = 2L
     private val ACTION_DEBUG_MODE = 3L
     private val ACTION_CONTINUE = 4L
 
@@ -58,15 +56,9 @@ class AuthFragmentStep2 : GuidedStepSupportFragment() {
             actions,
             ACTION_API_KEY,
             getString(R.string.api_key_text),
-            PreferenceManager.get(API_KEY),
-            InputType.TYPE_CLASS_TEXT
-        )
-        addCheckedAction(
-            actions,
-            ACTION_CHECK_CERTS,
-            getString(R.string.disable_ssl_verification),
-            getString(R.string.disable_ssl_verification_desc),
-            PreferenceManager.get(DISABLE_SSL_VERIFICATION)
+            // Never prefill the stored key: anyone holding the remote could read it from settings.
+            "",
+            InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         )
         addCheckedAction(
             actions,
@@ -94,7 +86,6 @@ class AuthFragmentStep2 : GuidedStepSupportFragment() {
                 PreferenceManager.save(SCREENSAVER_ALBUMS, emptySet())
                 PreferenceManager.save(API_KEY, entry.apiKey)
                 PreferenceManager.save(HOST_NAME, entry.hostName)
-                PreferenceManager.save(DISABLE_SSL_VERIFICATION, findActionById(ACTION_CHECK_CERTS)?.isChecked == true)
                 PreferenceManager.save(DEBUG_MODE, findActionById(ACTION_DEBUG_MODE)?.isChecked == true)
                 val navControl = findNavController()
                 navControl.navigate(AuthFragmentStep2Directions.actionGlobalHomeFragment(), NavOptions.Builder().setPopUpTo(R.id.authFragment, true).build())

@@ -15,6 +15,25 @@ import retrofit2.Response
 class ApiUtilTest {
 
     @Test
+    fun `file urls never contain the api key`() {
+        val urls = listOf(
+            ApiUtil.buildFileUrl("https://h", "id", "VIDEO", forceOriginal = false, loadEdited = false),
+            ApiUtil.buildFileUrl("https://h", "id", "VIDEO", forceOriginal = true, loadEdited = false),
+            ApiUtil.buildFileUrl("https://h", "id", "IMAGE", forceOriginal = false, loadEdited = true),
+            ApiUtil.buildFileUrl("https://h", "id", "IMAGE", forceOriginal = true, loadEdited = false)
+        )
+        assertEquals(
+            listOf(
+                "https://h/api/assets/id/video/playback",
+                "https://h/api/assets/id/original",
+                "https://h/api/assets/id/original?edited=true",
+                "https://h/api/assets/id/original"
+            ),
+            urls
+        )
+    }
+
+    @Test
     fun `403 with required permission all body returns exact existing message and reads body once`(): Unit = runBlocking {
         val mockBody = mock(ResponseBody::class.java)
         `when`(mockBody.string()).thenReturn("required permission: all")
