@@ -13,6 +13,7 @@ import timber.log.Timber
 import java.util.UUID
 
 object ApiUtil {
+    internal const val MISSING_PERMISSION_MESSAGE = "API key is missing a permission. In the Immich web interface, grant it only the read permissions listed in the README: asset.read, asset.view, asset.download, album.read, person.read, memory.read, folder.read, timeline.read."
 
     fun getThumbnailUrl(assetId: String?, format: String, loadEdited: Boolean = false, includeApiKey: Boolean = false): String? {
         return assetId?.let {
@@ -57,7 +58,7 @@ object ApiUtil {
                 else -> {
                     val bodyString: String? = res.errorBody()?.string()
                     if(bodyString?.contains("required permission: all") == true){
-                        Either.Left("API key is missing the permission \"all\". Please adapt your permissions in the Immich web interface.")
+                        Either.Left(MISSING_PERMISSION_MESSAGE)
                     } else {
                         val parsed = parseErrorBodySafely(bodyString)
                         val baseMessage = parsed?.message?.toDisplayMessage(bodyString ?: "Unknown error") ?: (bodyString ?: "Unknown error")
