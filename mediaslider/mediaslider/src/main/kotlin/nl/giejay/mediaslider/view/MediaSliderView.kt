@@ -11,6 +11,7 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -36,6 +37,12 @@ import nl.giejay.mediaslider.adapter.ScreenSlidePagerAdapter
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.model.SliderItemType
 import nl.giejay.mediaslider.model.SliderItemViewHolder
+import nl.giejay.mediaslider.transformations.GlideTransformations
+import nl.giejay.mediaslider.uhd.UhdFit
+import nl.giejay.mediaslider.uhd.UhdPhotoSurface
+import nl.giejay.mediaslider.uhd.isUhdEligible
+import nl.giejay.mediaslider.uhd.uhdPreloadIndex
+import nl.giejay.mediaslider.uhd.usesUhdSurface
 import nl.giejay.mediaslider.plugin.MetadataViewPlugin
 import nl.giejay.mediaslider.plugin.SliderViewPlugin
 import nl.giejay.mediaslider.plugin.SliderViewPluginContext
@@ -78,6 +85,7 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
     private var defaultExoFactory: DataSource.Factory = DefaultHttpDataSource.Factory()
     private var pagerAdapter: ScreenSlidePagerAdapter? = null
     private var loading = false
+    private var uhdSurface: UhdPhotoSurface? = null
     private val ioScope = CoroutineScope(Job() + Dispatchers.IO)
     private data class ViewPluginEntry(val plugin: SliderViewPlugin<Any?>, val state: Any?)
     private val viewPlugins = mutableListOf<ViewPluginEntry>()
@@ -110,6 +118,7 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        uhdSurface?.leave()
         if (isVolumeReceiverRegistered) {
             try {
                 context.unregisterReceiver(volumeReceiver)
@@ -169,13 +178,52 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
         controller.restorePagerFocus()
     }
 
+    private fun createUhdSurface(): UhdPhotoSurface? {
+        val mode = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay.mode
+        val metrics = resources.displayMetrics
+        if (!usesUhdSurface(
+                mode.physicalWidth, mode.physicalHeight, metrics.widthPixels, metrics.heightPixels, config.isOnlyUseThumbnails
+            )
+        ) {
+            return null
+        }
+        val fit = when (config.glideTransformation) {
+            GlideTransformations.CENTER_CROP -> UhdFit.FILL
+            GlideTransformations.CENTER_INSIDE -> UhdFit.FIT
+            GlideTransformations.SAFE_CENTER_CROP -> UhdFit.SAFE_FILL
+        }
+        // Next to the pager: the layout's opaque background would cover anything added to this view instead.
+        val pagerParent = mPager.parent as ConstraintLayout
+        return UhdPhotoSurface(pagerParent, mode.physicalWidth, mode.physicalHeight, fit, config.maxCutOffWidth, config.maxCutOffHeight)
+    }
+
+    private fun showsOnUhdSurface(item: SliderItemViewHolder): Boolean =
+        uhdSurface != null && item.mainItem.url != null &&
+            isUhdEligible(item.type == SliderItemType.IMAGE, item.hasSecondaryItem(), config.zoomAndScrollPanorama)
+
+    private fun showOnUhdSurface(index: Int) {
+        val surface = uhdSurface ?: return
+        val item = config.items[index]
+        if (!showsOnUhdSurface(item)) {
+            surface.leave()
+            return
+        }
+        val page = mPager.findViewWithTag<View>("view$index")?.findViewById<View>(R.id.mBigImage) ?: return
+        surface.show(index, item.mainItem.url!!, page)
+        uhdPreloadIndex(index, config.items.size) { showsOnUhdSurface(config.items[it]) }?.let {
+            surface.preload(config.items[it].mainItem.url!!)
+        }
+    }
+
     private fun initViewsAndSetAdapter(listener: ExoPlayerListener) {
+        uhdSurface = createUhdSurface()
         pagerAdapter = ScreenSlidePagerAdapter(
             context,
             config.items,
             config,
             { mPager.currentItem },
-            listener
+            listener,
+            ::showsOnUhdSurface
         )
 
         try {
@@ -210,6 +258,10 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
                 }
                 val sliderItem = config.items[sliderItemIndex]
                 val mainItem = sliderItem.mainItem
+
+                if (v == 0f && i1 == 0) {
+                    showOnUhdSurface(sliderItemIndex)
+                }
 
                 viewPlugins.forEach { entry ->
                     entry.plugin.onPageSettled(viewPluginContext, config, sliderItem, sliderItemIndex, mainHandler, entry.state)
@@ -252,6 +304,7 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
             }
 
             override fun onPageSelected(i: Int) {
+                uhdSurface?.leave()
                 viewPlugins.forEach { it.plugin.onPageSelected(viewPluginContext, i, it.state) }
                 if (!controller.isControllerVisible) {
                     controller.restorePagerFocus()
@@ -266,6 +319,7 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
     }
 
     fun onDestroy() {
+        uhdSurface?.release()
         ioScope.cancel()
         viewPlugins.forEach { it.plugin.onDestroy(viewPluginContext, it.state) }
         controller.onDestroy()
@@ -293,7 +347,9 @@ open class MediaSliderView(context: Context) : ConstraintLayout(context) {
             controller.cancelNextAssetTimer()
         }
         config.items = items
+        uhdSurface?.leave() // the pages are rebuilt, with their previews on top
         pagerAdapter!!.setItems(items)
+        mPager.post { if (mPager.currentItem < config.items.size) showOnUhdSurface(mPager.currentItem) }
         if (controller.slideShowPlaying && currentItemType() == SliderItemType.IMAGE) {
             controller.startTimerNextAsset()
         }

@@ -29,7 +29,8 @@ class ScreenSlidePagerAdapter(private val context: Context,
                               private var items: List<SliderItemViewHolder>,
                               private val config: MediaSliderConfiguration,
                               private val currentIndex: () -> Int,
-                              private val exoPlayerListener: ExoPlayerListener) : PagerAdapter() {
+                              private val exoPlayerListener: ExoPlayerListener,
+                              private val showsOnUhdSurface: (SliderItemViewHolder) -> Boolean = { false }) : PagerAdapter() {
     private var imageView: TouchImageView? = null
     private val progressBars: MutableMap<Int, ProgressBar> = HashMap()
     private val failedPositions = mutableSetOf<String>()
@@ -63,7 +64,7 @@ class ScreenSlidePagerAdapter(private val context: Context,
                 loadImageIntoView(view, R.id.right_image, position, model.secondaryItem!!)
             } else {
                 view = inflater.inflate(R.layout.image_item, container, false)
-                loadImageIntoView(view, R.id.mBigImage, position, model.mainItem)
+                loadImageIntoView(view, R.id.mBigImage, position, model.mainItem, showsOnUhdSurface(model))
             }
         } else if (model.type == SliderItemType.VIDEO) {
             // Use texture view for vertical videos OR if this position previously failed with SurfaceView
@@ -99,14 +100,17 @@ class ScreenSlidePagerAdapter(private val context: Context,
     private fun loadImageIntoView(imageRootLayout: View,
                                   imageViewResource: Int,
                                   position: Int,
-                                  model: SliderItem) {
+                                  model: SliderItem,
+                                  previewOnly: Boolean = false) {
         imageView = imageRootLayout.findViewById(imageViewResource)
         val progressBar = imageRootLayout.findViewById<ProgressBar>(R.id.mProgressBar)
         if (progressBar != null) {
             progressBars[position] = progressBar
         }
+        // On the surface, the page only needs the preview, so the original is not downloaded twice.
+        val useThumbnail = config.isOnlyUseThumbnails || previewOnly
         var glideLoader = Glide.with(context)
-            .load(if (config.isOnlyUseThumbnails) model.thumbnailUrl else model.url)
+            .load(if (useThumbnail) model.thumbnailUrl else model.url)
             .transform(config.glideTransformation.transform(context, config))
             .listener(object : RequestListener<Drawable> {
                 override fun onLoadFailed(e: GlideException?,
@@ -128,7 +132,7 @@ class ScreenSlidePagerAdapter(private val context: Context,
                 }
 
             })
-        if (!config.isOnlyUseThumbnails) {
+        if (!useThumbnail) {
             glideLoader = glideLoader.thumbnail(Glide.with(context)
                 .load(model.thumbnailUrl)
                 .transform(config.glideTransformation.transform(context, config)))
