@@ -120,7 +120,7 @@ private fun intentAvailable(intent: Intent, context: Context): Boolean {
     return infos.isNotEmpty()
 }
 
-data object SCREENSAVER_INTERVAL : IntListPref(3,
+data object SCREENSAVER_INTERVAL : IntListPref(20,
     ImmichApplication.appContext!!.getString(R.string.interval),
     ImmichApplication.appContext!!.getString(R.string.screensaver_interval_desc),
     R.array.interval_titles,
