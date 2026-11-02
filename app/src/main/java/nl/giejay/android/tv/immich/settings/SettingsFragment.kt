@@ -99,9 +99,6 @@ class SettingsFragment : RowsSupportFragment() {
                     )
                 )
             )
-            mainFragmentAdapter.fragmentHost?.notifyDataReady(
-                mainFragmentAdapter
-            )
         }
     }
 

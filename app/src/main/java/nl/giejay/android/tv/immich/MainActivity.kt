@@ -113,7 +113,7 @@ class MainActivity : FragmentActivity() {
             return
         }
 
-        navGraph.setStartDestination(R.id.homeFragment)
+        navGraph.setStartDestination(R.id.homeRowsFragment)
         navController.graph = navGraph
 
         when (target) {
@@ -159,8 +159,8 @@ class MainActivity : FragmentActivity() {
             withContext(Dispatchers.Main) {
                 ViewModelProvider(this@MainActivity)[MediaSliderViewModel::class.java].configuration = config
                 try {
-                    // the global action (not the homeFragment-scoped one) since the current
-                    // destination may have moved on during the network round-trip above
+                    // a global action since the current destination may have moved on during
+                    // the network round-trip above
                     navController.navigate(R.id.action_to_photo_slider, ImmichMediaSliderArgs(timelineView = false).toBundle())
                 } catch (e: IllegalArgumentException) {
                     Timber.w(e, "Could not navigate to the photo slider for deep-linked asset $assetId")
@@ -179,7 +179,7 @@ class MainActivity : FragmentActivity() {
             navGraph.setStartDestination(R.id.authFragment)
         } else {
             Timber.i("Start page is home")
-            navGraph.setStartDestination(R.id.homeFragment)
+            navGraph.setStartDestination(R.id.homeRowsFragment)
         }
 
         // Set the graph to trigger loading the start destination

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_search_hint">Buscar fotos, lugares o personas</string>
+    <string name="home_latest">Últimas fotos y vídeos</string>
+    <string name="home_trips">Viajes</string>
+    <string name="home_people">Personas</string>
+    <string name="home_more">Más</string>
+    <string name="home_server_unreachable">No se puede conectar con el servidor. Comprueba que estás en casa o conectado a la VPN.</string>
+    <string name="home_row_failed">No se ha podido cargar esta fila. Pulsa para reintentar.</string>
+</resources>

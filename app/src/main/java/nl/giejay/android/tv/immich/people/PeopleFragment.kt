@@ -44,14 +44,16 @@ class PeopleFragment : VerticalCardGridFragment<Person>() {
         return null
     }
 
-    override fun createCard(a: Person): Card {
-        return Card(
-            a.name ?: "Unknown",
-            "",
-            a.id.toString(),
-            ApiUtil.getPersonThumbnail(a.id),
-            ApiUtil.getPersonThumbnail(a.id),
-            false
-        )
-    }
+    override fun createCard(a: Person): Card = a.toCard()
+}
+
+fun Person.toCard(): Card {
+    return Card(
+        name ?: "Unknown",
+        "",
+        id.toString(),
+        ApiUtil.getPersonThumbnail(id),
+        ApiUtil.getPersonThumbnail(id),
+        false
+    )
 }

@@ -2,6 +2,7 @@ package nl.giejay.android.tv.immich.home
 
 import arrow.core.Either
 import nl.giejay.android.tv.immich.api.model.Album
+import nl.giejay.android.tv.immich.card.Card
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -59,5 +60,24 @@ class HomeRowsLogicTest {
     @Test
     fun `missing id opens first item`() {
         assertEquals(0, startIndex(-1)); assertEquals(3, startIndex(3))
+    }
+
+    @Test
+    fun `a row is inserted by the fixed order whatever loaded first`() {
+        assertEquals(1, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_SEARCH, ROW_MORE), ROW_PEOPLE))
+        assertEquals(1, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_SEARCH, ROW_PEOPLE, ROW_MORE), ROW_LATEST))
+        assertEquals(2, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_SEARCH, ROW_LATEST, ROW_PEOPLE, ROW_MORE), ROW_TRIPS))
+    }
+
+    @Test
+    fun `row items are matched by kind and id`() {
+        val card = Card("a", "", "1", null, null)
+        assertTrue(isSameRowItem(HomeCardItem.PersonItem(card), HomeCardItem.PersonItem(card.copy(title = "b"))))
+        assertFalse(isSameRowItem(HomeCardItem.PersonItem(card), HomeCardItem.PersonItem(card.copy(id = "2"))))
+        assertFalse(
+            isSameRowItem(HomeCardItem.PersonItem(card), HomeCardItem.TripItem(Trip("1", "a", null), card))
+        )
+        assertTrue(isSameRowItem(HomeAction.Retry(ROW_TRIPS, "a"), HomeAction.Retry(ROW_TRIPS, "b")))
+        assertFalse(isSameRowItem(HomeAction.Retry(ROW_TRIPS, "a"), HomeCardItem.PersonItem(card)))
     }
 }

@@ -88,7 +88,9 @@ class AuthFragmentStep2 : GuidedStepSupportFragment() {
                 PreferenceManager.save(HOST_NAME, entry.hostName)
                 PreferenceManager.save(DEBUG_MODE, findActionById(ACTION_DEBUG_MODE)?.isChecked == true)
                 val navControl = findNavController()
-                navControl.navigate(AuthFragmentStep2Directions.actionGlobalHomeFragment(), NavOptions.Builder().setPopUpTo(R.id.authFragment, true).build())
+                // Clear the whole back stack: login is also reachable from Ajustes, and the screens left
+                // behind would still show the previous server.
+                navControl.navigate(AuthFragmentStep2Directions.actionGlobalHomeFragment(), NavOptions.Builder().setPopUpTo(R.id.nav_graph, true).build())
             } else if (entry.hostName.isEmpty()) {
                 Toast.makeText(activity, getString(R.string.enter_server_url), Toast.LENGTH_SHORT)
                     .show()

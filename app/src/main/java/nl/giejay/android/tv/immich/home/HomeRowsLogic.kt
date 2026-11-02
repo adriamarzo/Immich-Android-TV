@@ -2,6 +2,8 @@ package nl.giejay.android.tv.immich.home
 
 import arrow.core.Either
 import nl.giejay.android.tv.immich.api.model.Album
+import nl.giejay.android.tv.immich.api.model.Asset
+import nl.giejay.android.tv.immich.card.Card
 
 const val REFRESH_AFTER_MILLIS = 5 * 60 * 1000L
 
@@ -34,3 +36,35 @@ fun shouldRefresh(nowMillis: Long, lastLoadMillis: Long?): Boolean =
     lastLoadMillis == null || nowMillis - lastLoadMillis > REFRESH_AFTER_MILLIS
 
 fun startIndex(foundIndex: Int): Int = if (foundIndex < 0) 0 else foundIndex
+
+const val ROW_SEARCH = "search"
+const val ROW_LATEST = "latest"
+const val ROW_TRIPS = "trips"
+const val ROW_PEOPLE = "people"
+const val ROW_MORE = "more"
+val HOME_ROW_ORDER = listOf(ROW_SEARCH, ROW_LATEST, ROW_TRIPS, ROW_PEOPLE, ROW_MORE)
+
+sealed interface HomeAction {
+    data object Search : HomeAction
+    data class Section(val key: String, val title: String) : HomeAction
+    data class Retry(val rowKey: String, val message: String) : HomeAction
+}
+
+sealed interface HomeCardItem {
+    val card: Card
+
+    data class AssetItem(val asset: Asset, override val card: Card) : HomeCardItem
+    data class TripItem(val trip: Trip, override val card: Card) : HomeCardItem
+    data class PersonItem(override val card: Card) : HomeCardItem
+}
+
+/** Where a row goes when it appears, given that rows load out of order and some may be hidden. */
+fun rowInsertIndex(order: List<String>, present: Set<String>, key: String): Int =
+    order.takeWhile { it != key }.count { it in present }
+
+/** Whether two values are the same element of a row, so that a refresh keeps its focus. */
+fun isSameRowItem(old: Any, new: Any): Boolean = when {
+    old is HomeCardItem && new is HomeCardItem -> old::class == new::class && old.card.id == new.card.id
+    old is HomeAction.Retry && new is HomeAction.Retry -> old.rowKey == new.rowKey
+    else -> old == new
+}

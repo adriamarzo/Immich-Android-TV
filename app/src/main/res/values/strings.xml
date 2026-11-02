@@ -22,6 +22,15 @@
     <string name="no_firebase_body">Firebase has not been configured for this app. That means no account-specific features are enabled and watch progress is stored locally. To enable Firebase features, refer to the readme file.</string>
     <string name="continue_text">Continue</string>
 
+    <!-- Home rows -->
+    <string name="home_search_hint">Search photos, places or people</string>
+    <string name="home_latest">Latest photos and videos</string>
+    <string name="home_trips">Trips</string>
+    <string name="home_people">People</string>
+    <string name="home_more">More</string>
+    <string name="home_server_unreachable">Can\'t reach the server. Check that you are at home or connected to the VPN.</string>
+    <string name="home_row_failed">Could not load this row. Press to retry.</string>
+
     <!-- Menus -->
     <string name="menu_identity">Identity</string>
 
