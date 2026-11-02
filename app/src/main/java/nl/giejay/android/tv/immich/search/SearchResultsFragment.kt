@@ -47,6 +47,13 @@ class SearchResultsFragment : GenericAssetFragment() {
             val pad = (48 * resources.displayMetrics.density).toInt()
             setPadding(pad, 0, pad, 0)
             visibility = View.GONE
+            // The message is the only thing on screen when there are no results, so it takes the
+            // D-pad focus and shows it with an outline.
+            isFocusable = true
+            isFocusableInTouchMode = true
+            background = androidx.core.content.ContextCompat.getDrawable(requireContext(), R.drawable.search_field_background)
+            val vPad = (24 * resources.displayMetrics.density).toInt()
+            setPadding(pad, vPad, pad, vPad)
         }
         dock.addView(messageView)
         pendingMessage?.let { showMessage(it) }
@@ -111,6 +118,7 @@ class SearchResultsFragment : GenericAssetFragment() {
         messageView?.apply {
             setText(res)
             visibility = View.VISIBLE
+            requestFocus()
         }
     }
 }

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black"
+    android:gravity="center"
+    android:orientation="horizontal"
+    android:paddingHorizontal="@dimen/overscan_horizontal"
+    android:paddingVertical="@dimen/overscan_vertical">
+
+    <EditText
+        android:id="@+id/search_input"
+        android:layout_width="0dp"
+        android:layout_height="72dp"
+        android:layout_weight="1"
+        android:background="@drawable/search_field_background"
+        android:hint="@string/home_search_hint"
+        android:imeOptions="actionSearch"
+        android:importantForAutofill="no"
+        android:inputType="text"
+        android:maxLines="1"
+        android:nextFocusRight="@id/search_voice"
+        android:nextFocusLeft="@id/search_input"
+        android:paddingHorizontal="24dp"
+        android:singleLine="true"
+        android:textColor="@color/screen_white"
+        android:textColorHint="@color/screen_white_70"
+        android:textSize="22sp" />
+
+    <ImageButton
+        android:id="@+id/search_voice"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/search_mic_background"
+        android:contentDescription="@string/search_voice"
+        android:focusable="true"
+        android:nextFocusLeft="@id/search_input"
+        android:nextFocusRight="@id/search_voice"
+        android:src="@drawable/ic_mic"
+        android:tint="@color/search_mic_tint" />
+</LinearLayout>

@@ -327,4 +327,6 @@
     <string name="search_no_results">No photos found. Try other words or English.</string>
     <string name="search_not_enabled">Smart search is not enabled on the server.</string>
     <string name="search_failed">The search could not be completed.</string>
+    <string name="search_voice">Search by voice</string>
+    <string name="search_voice_unavailable">Voice search is not available on this TV.</string>
 </resources>

@@ -224,11 +224,14 @@
             app:destination="@id/viewSettings" />
     </fragment>
 
-    <!-- Empty placeholder: the search screen replaces it in a later change. -->
     <fragment
         android:id="@+id/searchFragment"
-        android:name="androidx.fragment.app.Fragment"
-        android:label="SearchFragment" />
+        android:name="nl.giejay.android.tv.immich.search.SearchFragment"
+        android:label="SearchFragment">
+        <action
+            android:id="@+id/action_search_to_results"
+            app:destination="@id/searchResultsFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/searchResultsFragment"
