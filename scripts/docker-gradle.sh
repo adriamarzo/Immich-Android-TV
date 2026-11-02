@@ -27,13 +27,14 @@ docker run --rm \
   -e WRITE_VERIF="$WRITE_VERIF" \
   -e RELEASE_KEYSTORE_PASSWORD -e RELEASE_KEY_ALIAS -e RELEASE_KEY_PASSWORD -e RELEASE_KEYSTORE_PATH \
   -w /work/src \
-  eclipse-temurin:17-jdk \
+  eclipse-temurin:17-jdk@sha256:91011320978c10ec51d2cde1eb6f616db6d2a739a0e521096c343dd3fed9abe6 \
   bash -c '
 set -euo pipefail
 export ANDROID_HOME=/sdk ANDROID_SDK_ROOT=/sdk
 if [ ! -x /sdk/cmdline-tools/latest/bin/sdkmanager ]; then
   apt-get update -qq && apt-get install -y -qq unzip curl >/dev/null
-  curl -sSL -o /tmp/ct.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+  curl -fsSL -o /tmp/ct.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+  echo "2d2d50857e4eb553af5a6dc3ad507a17adf43d115264b1afc116f95c92e5e258  /tmp/ct.zip" | sha256sum -c -
   mkdir -p /sdk/cmdline-tools && unzip -q /tmp/ct.zip -d /tmp/ct
   mv /tmp/ct/cmdline-tools /sdk/cmdline-tools/latest
 fi
