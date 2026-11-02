@@ -6,6 +6,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import arrow.core.Either
+import arrow.core.getOrElse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -65,7 +66,8 @@ abstract class GenericAssetFragment : VerticalCardGridFragment<Asset>() {
 
     override suspend fun loadData(): Either<String, List<Asset>> {
         if (!excludedAssetsLoaded) {
-            excludedAssetIds = loadExcludedAssetIds(apiClient)
+            // No set, no list: the results of this screen are never shown unfiltered.
+            excludedAssetIds = loadExcludedAssetIds(apiClient).getOrElse { return Either.Left(it) }
             excludedAssetsLoaded = true
         }
         return super.loadData()

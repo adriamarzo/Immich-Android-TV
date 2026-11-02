@@ -1,7 +1,10 @@
 package nl.giejay.android.tv.immich.home
 
 import arrow.core.Either
+import kotlinx.coroutines.runBlocking
 import nl.giejay.android.tv.immich.api.model.Album
+import nl.giejay.android.tv.immich.api.model.Asset
+import nl.giejay.android.tv.immich.api.model.Tag
 import nl.giejay.android.tv.immich.card.Card
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -23,7 +26,7 @@ class HomeRowsLogicTest {
             album("Viatge Roma", endDate = date(2023)), album("Viatge Lisboa", endDate = date(2025)),
             album("Viatge Oslo", endDate = null), album("Viatge"), album("Viatge  "),
             album("viatge Paris"), album("Viatges Bali"), album("Viatge Vacío", assetCount = 0))
-        assertEquals(listOf("Lisboa", "Roma", "Oslo"), albums.toTrips().map { it.title })
+        assertEquals(listOf("Lisboa", "Roma", "Oslo"), albums.toTrips(emptySet()).map { it.title })
     }
 
     @Test
@@ -79,5 +82,65 @@ class HomeRowsLogicTest {
         )
         assertTrue(isSameRowItem(HomeAction.Retry(ROW_TRIPS, "a"), HomeAction.Retry(ROW_TRIPS, "b")))
         assertFalse(isSameRowItem(HomeAction.Retry(ROW_TRIPS, "a"), HomeCardItem.PersonItem(card)))
+    }
+
+    private fun asset(id: String, tags: List<Tag>? = null) = Asset(
+        id = id, type = "IMAGE", deviceAssetId = null, exifInfo = null, fileModifiedAt = null,
+        albumName = null, people = null, tags = tags, originalPath = null, originalFileName = null
+    )
+
+    @Test
+    fun `an excluded album is not a trip`() {
+        val albums = listOf(album("Viatge Roma"), album("Viatge Lisboa"))
+        assertEquals(listOf("Lisboa"), albums.toTrips(setOf("id-Viatge Roma")).map { it.title })
+    }
+
+    @Test
+    fun `a failed exclusion load yields no list and asks for no assets`() = runBlocking {
+        var assetsAsked = false
+        val result = loadVisibleLatest(
+            exclusions = { Either.Left("Invalid status (500)") },
+            assets = { assetsAsked = true; Either.Right(listOf(asset("private"))) }
+        )
+        assertEquals(Either.Left("Invalid status (500)"), result)
+        assertFalse(assetsAsked)
+    }
+
+    @Test
+    fun `the latest list leaves out excluded and tagged assets, and carries the set it used`() = runBlocking {
+        val tagged = asset("tagged", listOf(Tag(null, Date(), "exclude_immich_tv", "")))
+        val result = loadVisibleLatest(
+            exclusions = { Either.Right(setOf("excluded")) },
+            assets = { Either.Right(listOf(asset("ok"), asset("excluded"), tagged)) }
+        )
+        assertEquals(Either.Right(VisibleLatest(setOf("excluded"), listOf(asset("ok")))), result)
+    }
+
+    @Test
+    fun `a failed asset load is a failure even when exclusions loaded`() = runBlocking {
+        val result = loadVisibleLatest(
+            exclusions = { Either.Right(emptySet()) },
+            assets = { Either.Left("Could not fetch data from API, response: timeout") }
+        )
+        assertTrue(result.isLeft())
+    }
+
+    @Test
+    fun `a failed refresh keeps the items already loaded`() {
+        val content = keepLoadedItemsOnFailure(listOf("a", "b"), RowContent.Failed(offline = true))
+        assertEquals(RowContent.Items(listOf("a", "b")), content)
+    }
+
+    @Test
+    fun `a failure with nothing loaded stays a failure`() {
+        val failed = RowContent.Failed(offline = false)
+        assertEquals(failed, keepLoadedItemsOnFailure(emptyList<String>(), failed))
+    }
+
+    @Test
+    fun `a successful refresh replaces the items`() {
+        val fresh = RowContent.Items(listOf("c"))
+        assertEquals(fresh, keepLoadedItemsOnFailure(listOf("a"), fresh))
+        assertEquals(RowContent.Hidden, keepLoadedItemsOnFailure(listOf("a"), RowContent.Hidden))
     }
 }

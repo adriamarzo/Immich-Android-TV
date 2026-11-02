@@ -34,10 +34,10 @@ import nl.giejay.android.tv.immich.card.Card
 import nl.giejay.android.tv.immich.card.CardPresenter
 import nl.giejay.android.tv.immich.people.toCard
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
+import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_MERGE_PORTRAIT_PHOTOS
 import nl.giejay.android.tv.immich.shared.util.buildViewerConfiguration
-import nl.giejay.android.tv.immich.shared.util.isHiddenByTag
 import nl.giejay.android.tv.immich.shared.util.loadExcludedAssetIds
 import nl.giejay.android.tv.immich.shared.util.toCard
 import nl.giejay.android.tv.immich.shared.util.toSliderItems
@@ -66,8 +66,10 @@ class HomeRowsFragment : BrowseSupportFragment() {
     private val rowLoadedAt = mutableMapOf<String, Long>()
     private lateinit var itemPresenters: PresenterSelector
 
+    // The last good set, and the albums it was loaded for. Only replaced by a complete load.
     @Volatile
     private var excludedAssetIds: Set<String> = emptySet()
+    private var excludedAssetIdsFor: Set<String>? = null
     private var focus = RowFocus(ROW_SEARCH, 0)
 
     // A new view selects its first row before focus is restored; that must not overwrite [focus].
@@ -113,7 +115,9 @@ class HomeRowsFragment : BrowseSupportFragment() {
     override fun onStart() {
         super.onStart()
         val now = System.currentTimeMillis()
-        CONTENT_ROWS.filter { shouldRefresh(now, rowLoadedAt[it]) }.forEach { loadRow(it) }
+        val exclusionsChanged = excludedAssetIdsFor.let { it != null && it != currentExcludedAlbums() }
+        CONTENT_ROWS.filter { shouldRefresh(now, rowLoadedAt[it]) || (exclusionsChanged && it != ROW_PEOPLE) }
+            .forEach { loadRow(it) }
     }
 
     override fun onResume() {
@@ -135,8 +139,9 @@ class HomeRowsFragment : BrowseSupportFragment() {
         if (rowJobs[key]?.isActive == true) return
         rowJobs[key] = viewLifecycleOwner.lifecycleScope.launch {
             val content = withContext(Dispatchers.IO) { fetchRow(key) }
-            rowLoadedAt[key] = System.currentTimeMillis()
-            showRow(key, content)
+            // Not stamped on failure, so the next start tries again.
+            if (content !is RowContent.Failed) rowLoadedAt[key] = System.currentTimeMillis()
+            showRow(key, if (key == ROW_LATEST) keepLoadedItemsOnFailure(loadedLatestItems(), content) else content)
         }
     }
 
@@ -144,7 +149,7 @@ class HomeRowsFragment : BrowseSupportFragment() {
         val client = ApiClient.getClient(ApiClientConfig.fromPrefs())
         when (key) {
             ROW_LATEST -> fetchLatest(client)
-            ROW_TRIPS -> client.listAlbums().map { albums -> albums.toTrips().map { it.toItem() } }
+            ROW_TRIPS -> client.listAlbums().map { albums -> albums.toTrips(currentExcludedAlbums()).map { it.toItem() } }
             else -> client.listPeople().map { people -> people.map { HomeCardItem.PersonItem(it.toCard()) } }
         }.toRowContent()
     } catch (e: CancellationException) {
@@ -157,13 +162,28 @@ class HomeRowsFragment : BrowseSupportFragment() {
     }
 
     private suspend fun fetchLatest(client: ApiClient): Either<String, List<HomeCardItem>> {
-        excludedAssetIds = loadExcludedAssetIds(client)
-        return client.listAssets(page = 1, pageCount = LATEST_PAGE_SIZE, contentType = ContentType.ALL)
-            .map { response -> response.assets.visible().map { HomeCardItem.AssetItem(it, it.toCard()) } }
+        val excludedAlbums = currentExcludedAlbums()
+        return loadVisibleLatest(
+            exclusions = { loadExcludedAssetIds(client, excludedAlbums) },
+            assets = {
+                client.listAssets(page = 1, pageCount = LATEST_PAGE_SIZE, contentType = ContentType.ALL).map { it.assets }
+            }
+        ).map { latest ->
+            excludedAssetIds = latest.excludedAssetIds
+            excludedAssetIdsFor = excludedAlbums
+            latest.assets.map { HomeCardItem.AssetItem(it, it.toCard()) }
+        }
     }
 
-    private fun List<Asset>.visible(): List<Asset> =
-        filterNot { it.isHiddenByTag() || excludedAssetIds.contains(it.id) }
+    private fun currentExcludedAlbums(): Set<String> = PreferenceManager.get(EXCLUDE_ASSETS_IN_ALBUM)
+
+    /** What a failed refresh may keep: nothing, if the items were filtered for other excluded albums. */
+    private fun loadedLatestItems(): List<HomeCardItem> =
+        if (excludedAssetIdsFor == currentExcludedAlbums()) {
+            rows[ROW_LATEST]?.items().orEmpty().filterIsInstance<HomeCardItem>()
+        } else {
+            emptyList()
+        }
 
     private fun Trip.toItem(): HomeCardItem {
         val thumbnail = ApiUtil.getThumbnailUrl(thumbnailAssetId, "thumbnail")
@@ -278,7 +298,7 @@ class HomeRowsFragment : BrowseSupportFragment() {
             page += 1
             client.listAssets(page = page, pageCount = LATEST_PAGE_SIZE, contentType = ContentType.ALL).fold(
                 { LoadMoreResult(emptyList(), false) },
-                { LoadMoreResult(it.assets.visible().toSliderItems(true, mergePortrait), it.canLoadMore) }
+                { LoadMoreResult(it.assets.withoutExcluded(excludedAssetIds).toSliderItems(true, mergePortrait), it.canLoadMore) }
             )
         }
     }

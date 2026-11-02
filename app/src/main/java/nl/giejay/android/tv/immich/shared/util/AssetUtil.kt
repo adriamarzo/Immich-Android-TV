@@ -3,10 +3,11 @@ package nl.giejay.android.tv.immich.shared.util
 import nl.giejay.mediaslider.model.SliderItem
 import nl.giejay.mediaslider.model.SliderItemType
 import nl.giejay.mediaslider.model.SliderItemViewHolder
+import arrow.core.Either
 import arrow.core.getOrElse
+import kotlinx.coroutines.CancellationException
 import nl.giejay.android.tv.immich.api.ApiClient
 import nl.giejay.android.tv.immich.api.MAX_SEARCH_PAGE_SIZE
-import nl.giejay.android.tv.immich.api.model.AssetResponse
 import nl.giejay.android.tv.immich.api.util.ApiUtil
 import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.util.Utils.pmap
@@ -165,13 +166,27 @@ fun Asset.toCard(): Card {
 fun Asset.isHiddenByTag(): Boolean =
     tags?.any { t -> t.name == "exclude_immich_tv" } ?: false
 
-suspend fun loadExcludedAssetIds(apiClient: ApiClient): Set<String> {
-    val excludedAlbums = PreferenceManager.get(EXCLUDE_ASSETS_IN_ALBUM)
-    if (excludedAlbums.isEmpty()) return emptySet()
-    return excludedAlbums.toList().pmap {
-        apiClient.listAssetsFromAlbum(listOf(it), pageCount = MAX_SEARCH_PAGE_SIZE)
-            .getOrElse { AssetResponse(emptyList(), false) }
-            .assets
-            .map { it -> it.id }
-    }.flatten().toSet()
+/**
+ * The ids in the excluded albums. One failed album fails the whole result: a partial set would show
+ * photos the owner excluded.
+ */
+suspend fun loadExcludedAssetIds(
+    apiClient: ApiClient,
+    excludedAlbums: Set<String> = PreferenceManager.get(EXCLUDE_ASSETS_IN_ALBUM)
+): Either<String, Set<String>> {
+    if (excludedAlbums.isEmpty()) return Either.Right(emptySet())
+    return try {
+        val responses = excludedAlbums.toList().pmap {
+            apiClient.listAssetsFromAlbum(listOf(it), pageCount = MAX_SEARCH_PAGE_SIZE)
+        }
+        val ids = mutableSetOf<String>()
+        for (response in responses) {
+            ids += response.getOrElse { return Either.Left(it) }.assets.map { it.id }
+        }
+        Either.Right(ids)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Either.Left("Could not load the excluded albums: ${e.javaClass.simpleName}")
+    }
 }

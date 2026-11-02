@@ -261,6 +261,82 @@ class ScreenSaverAssetLoaderTest {
         assertThat(actual.items.single().ids()).containsExactly("normal-asset")
     }
 
+    private suspend fun stubAnyListAssets(apiClient: ApiClient, vararg assets: Asset) {
+        whenever(
+            apiClient.listAssets(
+                page = any(),
+                pageCount = any(),
+                random = any(),
+                order = any(),
+                personIds = any(),
+                fromDate = anyOrNull(),
+                endDate = anyOrNull(),
+                contentType = any(),
+                albumIds = any()
+            )
+        ).thenReturn(Either.Right(AssetResponse(assets.toList(), true)))
+    }
+
+    private fun failingExclusionPrefs() {
+        setPreference(HOST_NAME, "https://example.com")
+        setPreference(API_KEY, "api-key")
+        setPreference(SCREENSAVER_TYPE, ScreenSaverType.RANDOM)
+        setPreference(SCREENSAVER_ALBUMS, emptySet())
+        setPreference(EXCLUDE_ASSETS_IN_ALBUM, setOf("excluded-album"))
+    }
+
+    @Test
+    fun `preview leaves without playing when exclusions fail`() = runTest {
+        failingExclusionPrefs()
+        val apiClient = mock<ApiClient>()
+        whenever(apiClient.listAssetsFromAlbum(any(), any(), any())).thenReturn(Either.Left("Invalid status (500)"))
+        stubAnyListAssets(apiClient, asset("private-asset"))
+        val host = mock<ScreenSaverAssetLoader.Host>()
+        whenever(host.exitWhenNothingToShow).thenReturn(true)
+
+        ScreenSaverAssetLoader(this, apiClient, host).start().join()
+
+        verify(host, never()).onScreenSaverConfigurationReady(any())
+        verify(host).exitScreenSaver()
+    }
+
+    @Test
+    fun `dream stays without assets while exclusions fail, until cancelled, without crashing`() = runTest {
+        failingExclusionPrefs()
+        val apiClient = mock<ApiClient>()
+        whenever(apiClient.listAssetsFromAlbum(any(), any(), any())).thenReturn(Either.Left("Invalid status (500)"))
+        stubAnyListAssets(apiClient, asset("private-asset"))
+        val host = mock<ScreenSaverAssetLoader.Host>()
+
+        val job = ScreenSaverAssetLoader(this, apiClient, host, exclusionRetryMillis = 1).start()
+        kotlinx.coroutines.withContext(Dispatchers.IO) { Thread.sleep(100) }
+        assertThat(job.isActive).isTrue()
+        job.cancel()
+        job.join()
+
+        verify(host, never()).onScreenSaverConfigurationReady(any())
+        verify(host, never()).exitScreenSaver()
+        verify(apiClient, never()).listAssets(any(), any(), any(), any(), any(), anyOrNull(), anyOrNull(), any(), any())
+    }
+
+    @Test
+    fun `dream retries exclusions and then plays a filtered set`() = runTest {
+        failingExclusionPrefs()
+        val apiClient = mock<ApiClient>()
+        whenever(apiClient.listAssetsFromAlbum(any(), any(), any()))
+            .thenReturn(Either.Left("Invalid status (500)"))
+            .thenReturn(Either.Right(AssetResponse(listOf(asset("excluded-asset")), false)))
+        stubAnyListAssets(apiClient, asset("random-asset"), asset("excluded-asset"))
+        val host = mock<ScreenSaverAssetLoader.Host>()
+
+        mockConstruction(MediaRemoteControlsKeyEventPlugin::class.java).use {
+            ScreenSaverAssetLoader(this, apiClient, host, exclusionRetryMillis = 1).start().join()
+            val captor = argumentCaptor<MediaSliderConfiguration>()
+            verify(host).onScreenSaverConfigurationReady(captor.capture())
+            assertThat(captor.firstValue.items.single().ids()).containsExactly("random-asset")
+        }
+    }
+
     private fun runLoaderTest(
         type: ScreenSaverType = ScreenSaverType.RANDOM,
         albums: Set<String> = emptySet(),

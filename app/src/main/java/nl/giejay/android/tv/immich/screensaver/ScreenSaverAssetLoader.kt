@@ -6,6 +6,7 @@ import arrow.core.getOrElse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import nl.giejay.android.tv.immich.R
@@ -17,7 +18,6 @@ import nl.giejay.android.tv.immich.api.model.AssetResponse
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
 import nl.giejay.android.tv.immich.shared.prefs.DEBUG_MODE
-import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.MetaDataScreen
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_ALBUMS
@@ -38,6 +38,7 @@ import nl.giejay.android.tv.immich.shared.prefs.SLIDER_PAN_EFFECT
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_EFFECT
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ZOOM_SCROLL_PANORAMAS
 import nl.giejay.android.tv.immich.shared.util.Utils.pmap
+import nl.giejay.android.tv.immich.shared.util.loadExcludedAssetIds
 import nl.giejay.android.tv.immich.shared.util.toSliderItems
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.util.LoadMore
@@ -107,7 +108,8 @@ internal fun buildScreenSaverConfiguration(
 class ScreenSaverAssetLoader(
     private val scope: CoroutineScope,
     private val apiClient: ApiClient,
-    private val host: Host
+    private val host: Host,
+    private val exclusionRetryMillis: Long = EXCLUSION_RETRY_MILLIS
 ) {
     interface Host {
         /** Host resolves [messageRes] against its own Context and shows a toast. */
@@ -134,14 +136,7 @@ class ScreenSaverAssetLoader(
     )
 
     fun start(): Job = scope.launch(Dispatchers.IO) {
-        val excludedAlbums = PreferenceManager.get(EXCLUDE_ASSETS_IN_ALBUM)
-        if (excludedAlbums.isNotEmpty()) {
-            excludedAssetIds = apiClient.listAssetsFromAlbum(excludedAlbums.toList(), pageCount = MAX_SEARCH_PAGE_SIZE)
-                .getOrElseLogged("excluded albums $excludedAlbums", AssetResponse(emptyList(), false))
-                .assets
-                .map { it.id }
-                .toSet()
-        }
+        if (!loadExclusions()) return@launch
 
         if (ScreenSaverType.ALBUMS == PreferenceManager.get(SCREENSAVER_TYPE)) {
             loadImagesFromAlbums(PreferenceManager.get(SCREENSAVER_ALBUMS).toList())
@@ -161,6 +156,36 @@ class ScreenSaverAssetLoader(
                     )
                 }
             )
+        }
+    }
+
+    /**
+     * False if the preview gave up. Assets are only fetched once the set is known, so nothing plays
+     * unfiltered: the preview leaves, the dream stays on black and retries until it is stopped.
+     */
+    private suspend fun loadExclusions(): Boolean {
+        var notified = false
+        while (true) {
+            when (val result = loadExcludedAssetIds(apiClient)) {
+                is Either.Right -> {
+                    excludedAssetIds = result.value
+                    return true
+                }
+                is Either.Left -> {
+                    Timber.w("Could not load the excluded albums for the screensaver")
+                    if (host.exitWhenNothingToShow) {
+                        failAndExit(R.string.could_not_load_assets)
+                        return false
+                    }
+                    if (!notified) {
+                        notified = true
+                        withContext(Dispatchers.Main) {
+                            host.showScreenSaverMessage(R.string.could_not_load_assets, longDuration = true)
+                        }
+                    }
+                    delay(exclusionRetryMillis)
+                }
+            }
         }
     }
 
@@ -269,5 +294,6 @@ class ScreenSaverAssetLoader(
 
     companion object {
         private const val PAGE_COUNT = 100
+        private const val EXCLUSION_RETRY_MILLIS = 60_000L
     }
 }

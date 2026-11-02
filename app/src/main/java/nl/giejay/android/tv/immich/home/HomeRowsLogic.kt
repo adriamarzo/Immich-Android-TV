@@ -1,9 +1,11 @@
 package nl.giejay.android.tv.immich.home
 
 import arrow.core.Either
+import arrow.core.flatMap
 import nl.giejay.android.tv.immich.api.model.Album
 import nl.giejay.android.tv.immich.api.model.Asset
 import nl.giejay.android.tv.immich.card.Card
+import nl.giejay.android.tv.immich.shared.util.isHiddenByTag
 
 const val REFRESH_AFTER_MILLIS = 5 * 60 * 1000L
 
@@ -12,8 +14,8 @@ private const val OFFLINE_PREFIX = "Could not fetch data from API"
 
 data class Trip(val albumId: String, val title: String, val thumbnailAssetId: String?)
 
-fun List<Album>.toTrips(): List<Trip> =
-    filter { it.assetCount > 0 && it.albumName.startsWith(TRIP_PREFIX) }
+fun List<Album>.toTrips(excludedAlbumIds: Set<String>): List<Trip> =
+    filter { it.assetCount > 0 && it.albumName.startsWith(TRIP_PREFIX) && it.id !in excludedAlbumIds }
         .mapNotNull { album ->
             val title = album.albumName.removePrefix(TRIP_PREFIX).trim()
             if (title.isEmpty()) null else album to title
@@ -31,6 +33,25 @@ fun <T> Either<String, List<T>>.toRowContent(): RowContent<T> = fold(
     { RowContent.Failed(offline = it.startsWith(OFFLINE_PREFIX)) },
     { if (it.isEmpty()) RowContent.Hidden else RowContent.Items(it) }
 )
+
+/** A page of the Latest row and the exclusion set it was filtered with. */
+data class VisibleLatest(val excludedAssetIds: Set<String>, val assets: List<Asset>)
+
+fun List<Asset>.withoutExcluded(excludedAssetIds: Set<String>): List<Asset> =
+    filterNot { it.isHiddenByTag() || it.id in excludedAssetIds }
+
+/** Exclusions come first: when they cannot be loaded there is no list, never an unfiltered one. */
+suspend fun loadVisibleLatest(
+    exclusions: suspend () -> Either<String, Set<String>>,
+    assets: suspend () -> Either<String, List<Asset>>
+): Either<String, VisibleLatest> =
+    exclusions().flatMap { excluded ->
+        assets().map { VisibleLatest(excluded, it.withoutExcluded(excluded)) }
+    }
+
+/** A failed refresh leaves a row that has already loaded as it is. */
+fun <T> keepLoadedItemsOnFailure(loaded: List<T>, content: RowContent<T>): RowContent<T> =
+    if (content is RowContent.Failed && loaded.isNotEmpty()) RowContent.Items(loaded) else content
 
 fun shouldRefresh(nowMillis: Long, lastLoadMillis: Long?): Boolean =
     lastLoadMillis == null || nowMillis - lastLoadMillis > REFRESH_AFTER_MILLIS
