@@ -64,6 +64,12 @@ interactively (the key is never passed as an argument or printed), and reports P
 reads work, and that the key is denied on admin users, API keys, the system config, and on changing or deleting assets and
 albums. Those checks use random ids, so they change nothing even if a key turns out to be capable, in which case they fail.
 
+## Excluded albums are not a privacy control
+
+Albums excluded in the settings stay out of the home screen, album and person grids, search and the
+screensaver. Timeline and Folders do not apply this filter, and home screen channels, which are off by
+default, do not either. Do not rely on exclusions to keep photos from someone who can use the TV.
+
 ## Building a release
 
 Gradle is only run through the Docker wrapper, never directly on the host.

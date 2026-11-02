@@ -168,7 +168,8 @@ fun Asset.isHiddenByTag(): Boolean =
 
 /**
  * The ids in the excluded albums. One failed album fails the whole result: a partial set would show
- * photos the owner excluded.
+ * photos the owner excluded. An album the server no longer lists is skipped, since nothing is left
+ * to hide and the picker has no card to untick it; if the list itself fails, the whole result fails.
  */
 suspend fun loadExcludedAssetIds(
     apiClient: ApiClient,
@@ -176,7 +177,8 @@ suspend fun loadExcludedAssetIds(
 ): Either<String, Set<String>> {
     if (excludedAlbums.isEmpty()) return Either.Right(emptySet())
     return try {
-        val responses = excludedAlbums.toList().pmap {
+        val existing = apiClient.listAlbums().getOrElse { return Either.Left(it) }.map { it.id }.toSet()
+        val responses = excludedAlbums.filter { it in existing }.pmap {
             apiClient.listAssetsFromAlbum(listOf(it), pageCount = MAX_SEARCH_PAGE_SIZE)
         }
         val ids = mutableSetOf<String>()

@@ -18,6 +18,9 @@ import nl.giejay.android.tv.immich.api.model.AssetResponse
 import nl.giejay.android.tv.immich.api.model.Tag
 import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
+import kotlinx.coroutines.runBlocking
+import nl.giejay.android.tv.immich.api.model.Album
+import java.util.Date
 import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.HOST_NAME
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
@@ -48,6 +51,16 @@ class ScreenSaverAssetLoaderTest {
 
     private lateinit var appContext: Context
     private lateinit var sharedPreferences: SharedPreferences
+
+    private fun apiClientWithExcludedAlbum(): ApiClient {
+        val client = mock<ApiClient>()
+        runBlocking {
+            whenever(client.listAlbums(any())).thenReturn(
+                Either.Right(listOf(Album("excluded", "", "excluded-album", null, Date(0), null, 1)))
+            )
+        }
+        return client
+    }
 
     @Before
     fun setUp() {
@@ -288,7 +301,7 @@ class ScreenSaverAssetLoaderTest {
     @Test
     fun `preview leaves without playing when exclusions fail`() = runTest {
         failingExclusionPrefs()
-        val apiClient = mock<ApiClient>()
+        val apiClient = apiClientWithExcludedAlbum()
         whenever(apiClient.listAssetsFromAlbum(any(), any(), any())).thenReturn(Either.Left("Invalid status (500)"))
         stubAnyListAssets(apiClient, asset("private-asset"))
         val host = mock<ScreenSaverAssetLoader.Host>()
@@ -303,7 +316,7 @@ class ScreenSaverAssetLoaderTest {
     @Test
     fun `dream stays without assets while exclusions fail, until cancelled, without crashing`() = runTest {
         failingExclusionPrefs()
-        val apiClient = mock<ApiClient>()
+        val apiClient = apiClientWithExcludedAlbum()
         whenever(apiClient.listAssetsFromAlbum(any(), any(), any())).thenReturn(Either.Left("Invalid status (500)"))
         stubAnyListAssets(apiClient, asset("private-asset"))
         val host = mock<ScreenSaverAssetLoader.Host>()
@@ -322,7 +335,7 @@ class ScreenSaverAssetLoaderTest {
     @Test
     fun `dream retries exclusions and then plays a filtered set`() = runTest {
         failingExclusionPrefs()
-        val apiClient = mock<ApiClient>()
+        val apiClient = apiClientWithExcludedAlbum()
         whenever(apiClient.listAssetsFromAlbum(any(), any(), any()))
             .thenReturn(Either.Left("Invalid status (500)"))
             .thenReturn(Either.Right(AssetResponse(listOf(asset("excluded-asset")), false)))
@@ -350,7 +363,7 @@ class ScreenSaverAssetLoaderTest {
         setPreference(SCREENSAVER_ALBUMS, albums)
         setPreference(EXCLUDE_ASSETS_IN_ALBUM, excludedAlbums)
 
-        val apiClient = mock<ApiClient>()
+        val apiClient = apiClientWithExcludedAlbum()
         setupMocks(apiClient)
 
         val host = mock<ScreenSaverAssetLoader.Host>()
