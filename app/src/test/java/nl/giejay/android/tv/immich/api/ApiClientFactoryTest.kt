@@ -1,5 +1,6 @@
 package nl.giejay.android.tv.immich.api
 
+import com.sun.net.httpserver.HttpServer
 import okhttp3.Interceptor
 import okhttp3.Protocol
 import okhttp3.Request
@@ -10,6 +11,8 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
+import java.net.InetSocketAddress
+import java.util.concurrent.atomic.AtomicInteger
 
 class ApiClientFactoryTest {
 
@@ -75,4 +78,53 @@ class ApiClientFactoryTest {
         assertEquals(1, client.networkInterceptors.size)
         assertEquals(0, client.interceptors.size)
     }
+
+    @Test
+    fun `client does not follow redirects`() {
+        assertFalse(ApiClientFactory.getClient("secret", false) { server }.followRedirects)
+        assertFalse(ApiClientFactory.getClient("secret", true) { server }.followRedirects)
+    }
+
+    @Test
+    fun `player client does not log or buffer bodies and does not follow redirects`() {
+        val client = ApiClientFactory.getPlayerClient("secret") { server }
+        assertEquals(0, client.interceptors.size)
+        assertEquals(1, client.networkInterceptors.size)
+        assertFalse(client.followRedirects)
+        assertFalse(client.followSslRedirects)
+    }
+
+    @Test
+    fun `a redirect to another host is an error and never reaches that host`() {
+        val otherHostHits = AtomicInteger()
+        val other = localServer { otherHostHits.incrementAndGet(); 200 to emptyMap() }
+        var keySeen: String? = null
+        val configured = localServer { exchange ->
+            keySeen = exchange.requestHeaders.getFirst("x-api-key")
+            302 to mapOf("Location" to "http://127.0.0.1:${other.address.port}/stolen")
+        }
+        try {
+            val url = "http://127.0.0.1:${configured.address.port}"
+            val client = ApiClientFactory.getClient("secret", false) { url }
+            client.newCall(Request.Builder().url("$url/api/albums").build()).execute().use {
+                assertEquals(302, it.code)
+            }
+            assertEquals("secret", keySeen)
+            assertEquals(0, otherHostHits.get())
+        } finally {
+            configured.stop(0)
+            other.stop(0)
+        }
+    }
+
+    private fun localServer(handler: (com.sun.net.httpserver.HttpExchange) -> Pair<Int, Map<String, String>>): HttpServer =
+        HttpServer.create(InetSocketAddress("127.0.0.1", 0), 0).apply {
+            createContext("/") { exchange ->
+                val (code, headers) = handler(exchange)
+                headers.forEach { (name, value) -> exchange.responseHeaders.add(name, value) }
+                exchange.sendResponseHeaders(code, -1)
+                exchange.close()
+            }
+            start()
+        }
 }

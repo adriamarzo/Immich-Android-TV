@@ -14,9 +14,11 @@ object ApiClientFactory {
      */
     fun getClient(apiKey: String, debugMode: Boolean, serverUrl: () -> String): OkHttpClient {
         val builder = OkHttpClient.Builder()
+            // A redirect is an ordinary error, so nothing ever follows one off the configured server.
+            .followRedirects(false)
             .followSslRedirects(false)
-            // A network interceptor runs for every redirect hop. An application interceptor would
-            // run once, and OkHttp would copy x-api-key onto a redirect to another host.
+            // A network interceptor checks the host of each connection actually made, and the key
+            // is never in the application request that OkHttp would copy onto another hop.
             .addNetworkInterceptor(apiKeyInterceptor(apiKey, serverUrl))
         return if (debugMode) {
             builder.addInterceptor(ResponseLoggingInterceptor()).build()
@@ -24,6 +26,9 @@ object ApiClientFactory {
             builder.build()
         }
     }
+
+    /** For the video player. Never with the debug logging, which would buffer whole videos in memory. */
+    fun getPlayerClient(apiKey: String, serverUrl: () -> String): OkHttpClient = getClient(apiKey, false, serverUrl)
 
     internal fun apiKeyInterceptor(apiKey: String, serverUrl: () -> String): Interceptor = Interceptor { chain ->
         val request = chain.request()
