@@ -30,7 +30,6 @@ import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_TYPE
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ANIMATION_SPEED
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_DPAD_SEEK_IN_VIDEO
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_FORCE_ORIGINAL_VIDEO
-import nl.giejay.android.tv.immich.shared.prefs.SLIDER_GLIDE_TRANSFORMATION
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_MAX_CUT_OFF_HEIGHT
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_MERGE_PORTRAIT_PHOTOS
 import nl.giejay.android.tv.immich.shared.prefs.SLIDER_ONLY_USE_THUMBNAILS
@@ -41,6 +40,7 @@ import nl.giejay.android.tv.immich.shared.util.Utils.pmap
 import nl.giejay.android.tv.immich.shared.util.loadExcludedAssetIds
 import nl.giejay.android.tv.immich.shared.util.toSliderItems
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
+import nl.giejay.mediaslider.transformations.GlideTransformations
 import nl.giejay.mediaslider.util.LoadMore
 import nl.giejay.mediaslider.util.LoadMoreResult
 import timber.log.Timber
@@ -53,6 +53,17 @@ internal fun <T> Either<String, T>.getOrElseLogged(logContext: String, default: 
 internal fun filterExcludedAssets(assets: List<Asset>, excludedAssetIds: Set<String>): List<Asset> =
     assets.filter { asset -> asset.tags?.none { it.name == "exclude_immich_tv" } ?: true }
         .filterNot { excludedAssetIds.contains(it.id) }
+
+/**
+ * True for a photo that displays wider than tall. EXIF orientations 5 to 8 rotate it by 90 degrees.
+ * A photo of unknown size is left out, because it might be portrait. Videos are not filtered here.
+ */
+internal fun Asset.isLandscapeForScreenSaver(): Boolean {
+    if (type == "VIDEO") return true
+    val width = exifInfo?.exifImageWidth ?: return false
+    val height = exifInfo.exifImageHeight ?: return false
+    return if (exifInfo.orientation in 5..8) height > width else width > height
+}
 
 /** Single construction site of the screensaver's ApiClientConfig, shared by both hosts. */
 internal fun screenSaverApiClientConfig(): ApiClientConfig =
@@ -82,7 +93,8 @@ internal fun buildScreenSaverConfiguration(
         animationSpeedMillis = PreferenceManager.get(SLIDER_ANIMATION_SPEED),
         maxCutOffHeight = PreferenceManager.get(SLIDER_MAX_CUT_OFF_HEIGHT),
         maxCutOffWidth = PreferenceManager.get(SLIDER_MAX_CUT_OFF_HEIGHT),
-        glideTransformation = PreferenceManager.get(SLIDER_GLIDE_TRANSFORMATION),
+        // Fills the screen keeping the aspect ratio, cropping what does not fit.
+        glideTransformation = GlideTransformations.CENTER_CROP,
         enableSlideAnimation = PreferenceManager.get(SCREENSAVER_ANIMATE_ASSET_SLIDE),
         gradiantOverlay = true,
         metaDataConfig = PreferenceManager.getAllMetaData(MetaDataScreen.SCREENSAVER),
@@ -132,7 +144,9 @@ class ScreenSaverAssetLoader(
     private var currentPage = 0
     private var excludedAssetIds: Set<String> = emptySet()
     private val filteredAssetLoader = FilteredAssetLoader(
-        filterAssets = { filterExcludedAssets(it, excludedAssetIds) }
+        filterAssets = { assets ->
+            filterExcludedAssets(assets, excludedAssetIds).filter { it.isLandscapeForScreenSaver() }
+        }
     )
 
     fun start(): Job = scope.launch(Dispatchers.IO) {

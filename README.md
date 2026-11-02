@@ -67,8 +67,8 @@ albums. Those checks use random ids, so they change nothing even if a key turns 
 ## Excluded albums are not a privacy control
 
 Albums excluded in the settings stay out of the home screen, album and person grids, search and the
-screensaver. Timeline and Folders do not apply this filter, and home screen channels, which are off by
-default, do not either. Do not rely on exclusions to keep photos from someone who can use the TV.
+screensaver. Timeline does not apply this filter, and home screen channels, which are off by default, do
+not either. Do not rely on exclusions to keep photos from someone who can use the TV.
 
 ## Building a release
 

@@ -91,7 +91,6 @@ class HomeRowsFragment : BrowseSupportFragment() {
             ROW_MORE, getString(R.string.home_more), listOf(
                 HomeAction.Section(SECTION_TIMELINE, getString(R.string.timeline)),
                 HomeAction.Section(SECTION_ALBUMS, getString(R.string.albums)),
-                HomeAction.Section(SECTION_FOLDERS, getString(R.string.folders)),
                 HomeAction.Section(SECTION_SETTINGS, getString(R.string.settings))
             )
         )

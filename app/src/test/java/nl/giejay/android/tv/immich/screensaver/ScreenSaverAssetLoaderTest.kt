@@ -20,6 +20,7 @@ import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.ContentType
 import kotlinx.coroutines.runBlocking
 import nl.giejay.android.tv.immich.api.model.Album
+import nl.giejay.android.tv.immich.api.model.AssetExifInfo
 import java.util.Date
 import nl.giejay.android.tv.immich.shared.prefs.EXCLUDE_ASSETS_IN_ALBUM
 import nl.giejay.android.tv.immich.shared.prefs.HOST_NAME
@@ -28,6 +29,7 @@ import nl.giejay.android.tv.immich.shared.prefs.Pref
 import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_ALBUMS
 import nl.giejay.android.tv.immich.shared.prefs.SCREENSAVER_TYPE
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
+import nl.giejay.mediaslider.transformations.GlideTransformations
 import nl.giejay.mediaslider.plugin.MediaRemoteControlsKeyEventPlugin
 import org.junit.After
 import org.junit.Before
@@ -252,6 +254,29 @@ class ScreenSaverAssetLoaderTest {
     }
 
     @Test
+    fun `shows only landscape photos, filling the screen`() = runLoaderTest(
+        type = ScreenSaverType.RANDOM,
+        setupMocks = { apiClient ->
+            whenever(
+                apiClient.listAssets(
+                    page = any(),
+                    pageCount = any(),
+                    random = any(),
+                    order = any(),
+                    personIds = any(),
+                    fromDate = anyOrNull(),
+                    endDate = anyOrNull(),
+                    contentType = any(),
+                    albumIds = any()
+                )
+            ).thenReturn(Either.Right(AssetResponse(listOf(asset("landscape"), asset("portrait", 3000, 4000)), true)))
+        }
+    ) { actual, _ ->
+        assertThat(actual.items.single().ids()).containsExactly("landscape")
+        assertThat(actual.glideTransformation).isEqualTo(GlideTransformations.CENTER_CROP)
+    }
+
+    @Test
     fun `filters out assets with exclude tag`() = runLoaderTest(
         type = ScreenSaverType.RANDOM,
         setupMocks = { apiClient ->
@@ -394,11 +419,14 @@ class ScreenSaverAssetLoaderTest {
         preferenceValues[pref.key()] = value
     }
 
-    private fun asset(id: String) = Asset(
+    private fun exif(width: Int, height: Int) =
+        AssetExifInfo(null, 1, width, height, null, null, null, null, null)
+
+    private fun asset(id: String, width: Int = 4000, height: Int = 3000) = Asset(
         id = id,
         type = "IMAGE",
         deviceAssetId = null,
-        exifInfo = null,
+        exifInfo = exif(width, height),
         fileModifiedAt = null,
         albumName = null,
         people = null,

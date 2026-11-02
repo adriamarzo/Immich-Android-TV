@@ -130,7 +130,8 @@ class ScreenSlidePagerAdapter(private val context: Context,
             })
         if (!config.isOnlyUseThumbnails) {
             glideLoader = glideLoader.thumbnail(Glide.with(context)
-                .load(model.thumbnailUrl))
+                .load(model.thumbnailUrl)
+                .transform(config.glideTransformation.transform(context, config)))
         }
         glideLoader.into(imageView!!)
     }
