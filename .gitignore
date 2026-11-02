@@ -21,3 +21,7 @@ commits.txt
 service-account-key.json
 *.jks
 *.keystore
+
+# Local working documents, never published
+/docs/superpowers/
+/.superpowers/
