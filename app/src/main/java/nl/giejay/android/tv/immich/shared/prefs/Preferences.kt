@@ -268,7 +268,7 @@ data object SLIDER_ONLY_USE_THUMBNAILS : BooleanPref(true,
     ImmichApplication.appContext!!.getString(R.string.use_hd_thumbnails),
     ImmichApplication.appContext!!.getString(R.string.use_hd_thumbnails_text))
 
-data object SLIDER_MERGE_PORTRAIT_PHOTOS : BooleanPref(true,
+data object SLIDER_MERGE_PORTRAIT_PHOTOS : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.merge_portrait_photos),
     ImmichApplication.appContext!!.getString(R.string.merge_portrait_photos_desc))
 
