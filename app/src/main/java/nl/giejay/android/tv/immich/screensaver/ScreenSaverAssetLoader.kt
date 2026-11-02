@@ -143,10 +143,14 @@ class ScreenSaverAssetLoader(
 
     private var currentPage = 0
     private var excludedAssetIds: Set<String> = emptySet()
-    private val filteredAssetLoader = FilteredAssetLoader(
-        filterAssets = { assets ->
-            filterExcludedAssets(assets, excludedAssetIds).filter { it.isLandscapeForScreenSaver() }
-        }
+    private val filterForScreenSaver: (List<Asset>) -> List<Asset> = { assets ->
+        filterExcludedAssets(assets, excludedAssetIds).filter { it.isLandscapeForScreenSaver() }
+    }
+    private val filteredAssetLoader = FilteredAssetLoader(filterAssets = filterForScreenSaver)
+    private val landscapeSource = LandscapeAssetSource(
+        search = apiClient::smartSearch,
+        details = apiClient::getAsset,
+        prefilter = filterForScreenSaver
     )
 
     fun start(): Job = scope.launch(Dispatchers.IO) {
@@ -204,6 +208,7 @@ class ScreenSaverAssetLoader(
     }
 
     private suspend fun loadNextAssets(screenSaverType: ScreenSaverType): Either<String, AssetResponse> {
+        if (screenSaverType == ScreenSaverType.LANDSCAPES) return landscapeSource.next()
         val contentType = if (PreferenceManager.get(SCREENSAVER_INCLUDE_VIDEOS)) ContentType.ALL else ContentType.IMAGE
         val page = currentPage
         currentPage += 1

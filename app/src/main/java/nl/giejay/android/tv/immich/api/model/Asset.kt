@@ -33,5 +33,10 @@ data class Asset(
     val tags: List<Tag>?,
     val originalPath: String?,
     val originalFileName: String?,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    // Only GET /assets/{id} fills this and [people]; search results leave them out.
+    val unassignedFaces: List<AssetFace>? = null
 )
+
+/** A face Immich detected and has not assigned to a person. */
+data class AssetFace(val id: String?)

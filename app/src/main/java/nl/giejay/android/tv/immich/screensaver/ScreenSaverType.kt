@@ -5,6 +5,11 @@ import nl.giejay.android.tv.immich.ImmichApplication
 import nl.giejay.android.tv.immich.R
 
 enum class ScreenSaverType : EnumWithTitle {
+    LANDSCAPES {
+        override fun getTitle(): String {
+            return ImmichApplication.appContext!!.getString(R.string.landscapes)
+        }
+    },
     ALBUMS {
         override fun getTitle(): String {
             return ImmichApplication.appContext!!.getString(R.string.albums)

@@ -310,4 +310,5 @@
     <string name="favorite_removed">已从收藏中移除</string>
     <string name="favorite_add_failed">添加到收藏失败</string>
     <string name="favorite_remove_failed">移除收藏失败</string>
+    <string name="landscapes">风景</string>
 </resources>

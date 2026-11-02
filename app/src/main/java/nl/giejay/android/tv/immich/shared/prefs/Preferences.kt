@@ -182,7 +182,7 @@ data object SCREENSAVER_PLAY_SOUND : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.play_sound),
     ImmichApplication.appContext!!.getString(R.string.play_sound_screensaver))
 
-data object SCREENSAVER_TYPE : EnumByTitlePref<ScreenSaverType>(ScreenSaverType.RECENT,
+data object SCREENSAVER_TYPE : EnumByTitlePref<ScreenSaverType>(ScreenSaverType.LANDSCAPES,
     ImmichApplication.appContext!!.getString(R.string.screensaver_type),
     ImmichApplication.appContext!!.getString(R.string.screensaver_type_desc)) {
 

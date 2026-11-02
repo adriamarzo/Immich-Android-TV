@@ -277,6 +277,19 @@ class ScreenSaverAssetLoaderTest {
     }
 
     @Test
+    fun `landscapes type plays only searched photos known to have no people`() = runLoaderTest(
+        type = ScreenSaverType.LANDSCAPES,
+        setupMocks = { apiClient ->
+            whenever(apiClient.smartSearch(any(), any(), any()))
+                .thenReturn(Either.Right(AssetResponse(listOf(asset("empty"), asset("unknown")), false)))
+            whenever(apiClient.getAsset("empty")).thenReturn(Either.Right(asset("empty").copy(people = emptyList())))
+            whenever(apiClient.getAsset("unknown")).thenReturn(Either.Left("failed"))
+        }
+    ) { actual, _ ->
+        assertThat(actual.items.flatMap { it.ids() }).containsExactly("empty")
+    }
+
+    @Test
     fun `filters out assets with exclude tag`() = runLoaderTest(
         type = ScreenSaverType.RANDOM,
         setupMocks = { apiClient ->

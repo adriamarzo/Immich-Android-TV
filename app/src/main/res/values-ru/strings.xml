@@ -305,4 +305,5 @@
     <string name="meta_data_padding_dialog_title">Отступ сверху и снизу элемента</string>
     <string name="meta_data_delete_desc">Удалить элемент</string>
     <string name="meta_data_save_desc">Сохранить элемент</string>
+    <string name="landscapes">Пейзажи</string>
 </resources>

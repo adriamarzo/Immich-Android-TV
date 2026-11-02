@@ -303,4 +303,5 @@
     <string name="meta_data_padding_dialog_title">Marge au-dessus et au-dessous de l’élément</string>
     <string name="meta_data_delete_desc">Supprimer l’élément</string>
     <string name="meta_data_save_desc">Enregistrer l’élément</string>
+    <string name="landscapes">Paysages</string>
 </resources>

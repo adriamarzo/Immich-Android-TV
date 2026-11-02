@@ -16,4 +16,5 @@
     <string name="search_failed">No se ha podido completar la búsqueda.</string>
     <string name="search_voice">Buscar por voz</string>
     <string name="search_voice_unavailable">La búsqueda por voz no está disponible en esta tele.</string>
+    <string name="landscapes">Paisajes</string>
 </resources>
