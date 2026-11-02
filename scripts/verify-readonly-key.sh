@@ -4,6 +4,7 @@
 # appears in process arguments, shell history or output. Response bodies are not printed.
 # Compatible with macOS bash 3.2 and BSD tools.
 set -u
+set +x
 
 printf 'Immich server URL (e.g. https://immich.example.com): '
 read -r BASE_URL
@@ -21,7 +22,7 @@ case "$BASE_URL" in
   *) echo "Refusing non-HTTPS URL." >&2; exit 2 ;;
 esac
 case "$API_KEY" in
-  *'"'*|*'\'*|*$'\n'*) echo "Key contains unsupported characters." >&2; exit 2 ;;
+  *'"'*|*'\'*|*[[:cntrl:]]*) echo "Key contains unsupported characters." >&2; exit 2 ;;
 esac
 
 FAILED=0
@@ -30,7 +31,8 @@ FAILED=0
 request() {
   local method="$1" path="$2" body="$3" code
   local -a args
-  args=(--config - -sS -o /dev/null -w '%{http_code}' --max-time 30 -X "$method")
+  # -q must come first: it makes curl ignore ~/.curlrc.
+  args=(-q --config - -sS -o /dev/null -w '%{http_code}' --max-time 30 -X "$method")
   if [ -n "$body" ]; then
     args+=(-H 'Content-Type: application/json' --data "$body")
   fi
@@ -65,6 +67,12 @@ check "POST /api/search/smart"     200 POST /api/search/smart '{"query":"playa",
 check "GET /api/admin/users (must be denied)" "401 403" GET /api/admin/users
 check "PUT /api/assets/<random> (must be denied)" "401 403" PUT "/api/assets/$(new_uuid)" '{"isFavorite":true}'
 check "DELETE /api/albums/<random> (must be denied)" "401 403" DELETE "/api/albums/$(new_uuid)"
+# Random ids and no force flag: even a capable key finds nothing to change, and gets a code other
+# than 401/403, which fails the check.
+check "DELETE /api/assets random id (must be denied)" "401 403" DELETE /api/assets "{\"ids\":[\"$(new_uuid)\"]}"
+check "PATCH /api/albums/<random> (must be denied)" "401 403" PATCH "/api/albums/$(new_uuid)" '{"description":""}'
+check "GET /api/api-keys (must be denied)" "401 403" GET /api/api-keys
+check "GET /api/system-config (must be denied)" "401 403" GET /api/system-config
 
 unset API_KEY
 if [ "$FAILED" = 0 ]; then

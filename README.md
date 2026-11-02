@@ -60,7 +60,9 @@ Create a dedicated API key in Immich and grant it exactly these permissions, and
 Never use the `all` permission. The app only reads from the server, so a read-only key limits the damage if the key ever leaks.
 
 To check that a key really is read-only, run `scripts/verify-readonly-key.sh`. It asks for the server URL and the key
-interactively (the key is never passed as an argument or printed), and reports PASS or FAIL for each check.
+interactively (the key is never passed as an argument or printed), and reports PASS or FAIL for each check. It checks that
+reads work, and that the key is denied on admin users, API keys, the system config, and on changing or deleting assets and
+albums. Those checks use random ids, so they change nothing even if a key turns out to be capable, in which case they fail.
 
 ## Building a release
 
