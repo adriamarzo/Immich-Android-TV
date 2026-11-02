@@ -6,10 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.navigation.fragment.findNavController
 import nl.giejay.android.tv.immich.R
-import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
 import nl.giejay.mediaslider.plugin.TimelineStoryProgressPlugin
 import nl.giejay.mediaslider.view.MediaSliderFragment
@@ -40,10 +38,7 @@ class ImmichMediaSlider : MediaSliderFragment() {
             return
         }
 
-        setDefaultExoFactory(
-            DefaultHttpDataSource.Factory()
-                .setDefaultRequestProperties(mapOf("x-api-key" to PreferenceManager.get(API_KEY)))
-        )
+        setDefaultExoFactory(playerDataSourceFactory())
 
         if (bundle.timelineView) {
             val timelinePlugin = TimelineStoryProgressPlugin()

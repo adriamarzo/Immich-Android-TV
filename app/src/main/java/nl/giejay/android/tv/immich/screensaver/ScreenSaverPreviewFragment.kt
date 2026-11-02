@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,8 +15,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.api.ApiClient
-import nl.giejay.android.tv.immich.shared.prefs.API_KEY
 import nl.giejay.android.tv.immich.shared.prefs.PreferenceManager
+import nl.giejay.android.tv.immich.slider.playerDataSourceFactory
 import nl.giejay.mediaslider.config.MediaSliderConfiguration
 import nl.giejay.mediaslider.view.MediaSliderFragment
 import nl.giejay.mediaslider.view.MediaSliderView
@@ -75,10 +74,7 @@ class ScreenSaverPreviewFragment : MediaSliderFragment(), ScreenSaverAssetLoader
         }
 
         ioScope = CoroutineScope(Job() + Dispatchers.IO)
-        sliderView?.setDefaultExoFactory(
-            DefaultHttpDataSource.Factory()
-                .setDefaultRequestProperties(mapOf("x-api-key" to PreferenceManager.get(API_KEY)))
-        )
+        sliderView?.setDefaultExoFactory(playerDataSourceFactory())
         ScreenSaverAssetLoader(
             ioScope,
             ApiClient.getClient(screenSaverApiClientConfig()),
