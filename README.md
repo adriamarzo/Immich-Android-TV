@@ -121,11 +121,6 @@ project goes to its author. It is released under the GPL-3 license, the same as 
 You can support the project in several ways. The first one is by creating nice descriptive bug
 reports if you find any: https://github.com/giejay/Immich-Android-TV/issues/new/choose.
 <br><br>Even better is creating a PR: https://github.com/giejay/Immich-Android-TV/pulls.
-<br><br>
-Lastly, if you feel this Android TV app is a useful addition to the already great Immich app, you
-might consider buying me a coffee or a beer:
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/giejay)
 
 ## FAQ
 
