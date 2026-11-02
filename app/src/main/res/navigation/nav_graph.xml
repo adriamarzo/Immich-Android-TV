@@ -230,6 +230,15 @@
         android:name="androidx.fragment.app.Fragment"
         android:label="SearchFragment" />
 
+    <fragment
+        android:id="@+id/searchResultsFragment"
+        android:name="nl.giejay.android.tv.immich.search.SearchResultsFragment"
+        android:label="SearchResultsFragment">
+        <argument
+            android:name="query"
+            app:argType="string" />
+    </fragment>
+
     <dialog
         android:id="@+id/settings_dialog_fragment"
         android:name="nl.giejay.android.tv.immich.settings.SettingsDialogFragment">

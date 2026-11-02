@@ -345,7 +345,7 @@ abstract class VerticalCardGridFragment<ITEM> : GridFragment() {
         assetsStillToRender.removeAll(assetsPaginated)
     }
 
-    private suspend fun showErrorMessage(message: String) = withContext(Dispatchers.Main) {
+    protected open suspend fun showErrorMessage(message: String) = withContext(Dispatchers.Main) {
         if (isAdded) {
             Toast.makeText(requireContext(), message, Toast.LENGTH_LONG)
                 .show()

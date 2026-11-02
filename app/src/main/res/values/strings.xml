@@ -324,4 +324,7 @@
     <string name="favorite_removed">Removed from favorites</string>
     <string name="favorite_add_failed">Failed to add to favorites</string>
     <string name="favorite_remove_failed">Failed to remove from favorites</string>
+    <string name="search_no_results">No photos found. Try other words or English.</string>
+    <string name="search_not_enabled">Smart search is not enabled on the server.</string>
+    <string name="search_failed">The search could not be completed.</string>
 </resources>

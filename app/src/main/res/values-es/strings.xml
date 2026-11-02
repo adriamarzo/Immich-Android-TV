@@ -7,4 +7,7 @@
     <string name="home_more">Más</string>
     <string name="home_server_unreachable">No se puede conectar con el servidor. Comprueba que estás en casa o conectado a la VPN.</string>
     <string name="home_row_failed">No se ha podido cargar esta fila. Pulsa para reintentar.</string>
+    <string name="search_no_results">No se han encontrado fotos. Prueba con otras palabras o en inglés.</string>
+    <string name="search_not_enabled">La búsqueda inteligente no está activada en el servidor.</string>
+    <string name="search_failed">No se ha podido completar la búsqueda.</string>
 </resources>
