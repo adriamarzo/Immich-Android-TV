@@ -13,6 +13,7 @@ import nl.giejay.android.tv.immich.api.model.Memory
 import nl.giejay.android.tv.immich.api.model.Person
 import nl.giejay.android.tv.immich.api.model.SearchRequest
 import nl.giejay.android.tv.immich.api.model.SearchResponse
+import nl.giejay.android.tv.immich.api.model.SmartSearchRequest
 import nl.giejay.android.tv.immich.api.model.TimeBucketSummary
 import nl.giejay.android.tv.immich.api.model.TimelineAsset
 import nl.giejay.android.tv.immich.api.model.toTimelineAssets
@@ -91,6 +92,15 @@ internal fun SearchResponse.toAssetResponse(): AssetResponse =
 internal fun List<Asset>.toRandomAssetResponse(): AssetResponse =
     AssetResponse(this, true)
 
+enum class SearchFailure { NOT_ENABLED, OFFLINE, OTHER }
+
+// Classifies the messages produced by executeAPICall. Never receives or logs the query.
+fun searchFailure(message: String): SearchFailure = when {
+    message.contains("smart search is not enabled", ignoreCase = true) -> SearchFailure.NOT_ENABLED
+    message.startsWith("Could not fetch data from API") -> SearchFailure.OFFLINE
+    else -> SearchFailure.OTHER
+}
+
 class ApiClient(private val config: ApiClientConfig) {
     companion object ApiClient {
         private var apiClient: nl.giejay.android.tv.immich.api.ApiClient? = null
@@ -118,6 +128,11 @@ class ApiClient(private val config: ApiClientConfig) {
 
     private suspend fun search(searchRequest: SearchRequest): Either<String, SearchResponse> {
         return executeAPICall(200) { service.listAssets(searchRequest) }
+    }
+
+    suspend fun smartSearch(query: String, page: Int, pageCount: Int): Either<String, AssetResponse> {
+        val request = SmartSearchRequest(query = query, page = page, size = pageCount.coerceAtMost(MAX_SEARCH_PAGE_SIZE))
+        return executeAPICall(200) { service.smartSearch(request) }.map { it.toAssetResponse() }
     }
 
     suspend fun listAlbums(assetId: Option<String> = None): Either<String, List<Album>> {

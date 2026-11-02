@@ -6,6 +6,7 @@ import nl.giejay.android.tv.immich.api.model.Memory
 import nl.giejay.android.tv.immich.api.model.PeopleResponse
 import nl.giejay.android.tv.immich.api.model.SearchRequest
 import nl.giejay.android.tv.immich.api.model.SearchResponse
+import nl.giejay.android.tv.immich.api.model.SmartSearchRequest
 import nl.giejay.android.tv.immich.api.model.TimeBucketAssetsResponse
 import nl.giejay.android.tv.immich.api.model.TimeBucketSummary
 import retrofit2.Response
@@ -19,6 +20,9 @@ import retrofit2.http.Query
 interface ApiService {
     @POST("search/metadata")
     suspend fun listAssets(@Body searchRequest: SearchRequest): Response<SearchResponse>
+
+    @POST("search/smart")
+    suspend fun smartSearch(@Body request: SmartSearchRequest): Response<SearchResponse>
 
     @POST("search/random")
     suspend fun randomAssets(@Body searchRequest: SearchRequest): Response<List<Asset>>
