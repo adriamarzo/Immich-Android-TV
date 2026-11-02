@@ -6,6 +6,10 @@ import nl.giejay.android.tv.immich.api.model.Album
 import nl.giejay.android.tv.immich.api.model.Asset
 import nl.giejay.android.tv.immich.card.Card
 import nl.giejay.android.tv.immich.shared.util.isHiddenByTag
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 const val REFRESH_AFTER_MILLIS = 5 * 60 * 1000L
 
@@ -58,16 +62,12 @@ fun shouldRefresh(nowMillis: Long, lastLoadMillis: Long?): Boolean =
 
 fun startIndex(foundIndex: Int): Int = if (foundIndex < 0) 0 else foundIndex
 
-const val ROW_SEARCH = "search"
 const val ROW_LATEST = "latest"
 const val ROW_TRIPS = "trips"
 const val ROW_PEOPLE = "people"
-const val ROW_MORE = "more"
-val HOME_ROW_ORDER = listOf(ROW_SEARCH, ROW_LATEST, ROW_TRIPS, ROW_PEOPLE, ROW_MORE)
+val HOME_ROW_ORDER = listOf(ROW_LATEST, ROW_TRIPS, ROW_PEOPLE)
 
 sealed interface HomeAction {
-    data object Search : HomeAction
-    data class Section(val key: String, val title: String) : HomeAction
     data class Retry(val rowKey: String, val message: String) : HomeAction
 }
 
@@ -77,6 +77,14 @@ sealed interface HomeCardItem {
     data class AssetItem(val asset: Asset, override val card: Card) : HomeCardItem
     data class TripItem(val trip: Trip, override val card: Card) : HomeCardItem
     data class PersonItem(override val card: Card) : HomeCardItem
+}
+
+/** The line under the menu for the selected photo, such as "Menorca · 2 oct 2026". */
+fun heroLine(place: String?, date: Date?, locale: Locale, timeZone: TimeZone): String {
+    val formattedDate = date?.let {
+        SimpleDateFormat("d MMM yyyy", locale).apply { this.timeZone = timeZone }.format(it).replace(".", "")
+    }
+    return listOfNotNull(place?.trim()?.ifEmpty { null }, formattedDate).joinToString(" · ")
 }
 
 /** Where a row goes when it appears, given that rows load out of order and some may be hidden. */

@@ -1,12 +1,10 @@
 package nl.giejay.android.tv.immich.settings
 
-import android.app.Activity
-import androidx.leanback.app.RowsSupportFragment
-import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.HeaderItem
-import androidx.leanback.widget.ListRow
-import androidx.leanback.widget.ListRowPresenter
-import androidx.leanback.widget.OnItemViewClickedListener
+import android.os.Bundle
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import nl.giejay.android.tv.immich.ImmichApplication
 import nl.giejay.android.tv.immich.R
@@ -17,29 +15,21 @@ import nl.giejay.android.tv.immich.shared.prefs.ScreensaverPrefScreen
 import nl.giejay.android.tv.immich.shared.prefs.ViewPrefScreen
 
 
-class SettingsFragment : RowsSupportFragment() {
-    private val mRowsAdapter: ArrayObjectAdapter
-
-    init {
-        val selector = ListRowPresenter()
-        selector.setNumRows(1)
-        mRowsAdapter = ArrayObjectAdapter(selector)
-        onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ ->
-            val card = item as SettingsCard
-            card.onClick()
+class SettingsFragment : Fragment(R.layout.fragment_settings_list) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val list = view.findViewById<LinearLayout>(R.id.settings_list)
+        val rows = settingsCards().filter { it.visible }.map { card ->
+            val row = layoutInflater.inflate(R.layout.settings_list_row, list, false) as TextView
+            row.text = card.title
+            row.setOnClickListener { card.onClick() }
+            list.addView(row)
+            row
         }
-        adapter = mRowsAdapter
+        rows.firstOrNull()?.requestFocus()
     }
 
-    override fun onAttach(activity: Activity) {
-        super.onAttach(activity)
-        loadData()
-    }
-
-    private fun loadData() {
-        if (isAdded) {
-            mRowsAdapter.add(
-                createCardRow(
+    private fun settingsCards(): List<SettingsCard> =
                     listOf(
                         SettingsCard(
                             ImmichApplication.appContext!!.getString(R.string.server),
@@ -97,16 +87,4 @@ class SettingsFragment : RowsSupportFragment() {
                             )
                         }
                     )
-                )
-            )
-        }
-    }
-
-    private fun createCardRow(cards: List<SettingsCard>): ListRow {
-        val iconCardPresenter = SettingsIconPresenter(requireContext())
-        val adapter = ArrayObjectAdapter(iconCardPresenter)
-        adapter.addAll(0, cards.filter { it.visible })
-        val headerItem = HeaderItem(ImmichApplication.appContext!!.getString(R.string.settings))
-        return ListRow(headerItem, adapter)
-    }
 }

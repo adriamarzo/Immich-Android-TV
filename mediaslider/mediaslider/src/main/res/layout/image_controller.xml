@@ -2,13 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#D9000000"
+    android:background="@drawable/gradient_overlay"
     android:gravity="center"
     android:id="@+id/image_controller"
     android:elevation="20dp"
     android:orientation="vertical"
-    android:paddingTop="4dp"
-    android:paddingBottom="4dp">
+    android:paddingTop="32dp"
+    android:paddingBottom="16dp">
 
     <LinearLayout
         android:id="@+id/media_controller_button_row"

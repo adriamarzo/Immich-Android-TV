@@ -1,5 +1,6 @@
 package nl.giejay.android.tv.immich.album
 
+import nl.giejay.android.tv.immich.R
 import android.os.Bundle
 import android.view.View
 import androidx.lifecycle.lifecycleScope
@@ -124,7 +125,7 @@ class AlbumFragment : VerticalCardGridFragment<Album>() {
     override fun createCard(a: Album): Card {
         return Card(
             a.albumName,
-            a.description,
+            resources.getQuantityString(R.plurals.album_photo_count, a.assetCount, a.assetCount),
             a.id,
             ApiUtil.getThumbnailUrl(a.albumThumbnailAssetId, "thumbnail"),
             ApiUtil.getFileUrl(a.albumThumbnailAssetId, "IMAGE"),

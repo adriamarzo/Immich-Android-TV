@@ -160,7 +160,8 @@ fun Asset.toCard(): Card {
         this.id,
         ApiUtil.getThumbnailUrl(this.id, "thumbnail"),
         ApiUtil.getThumbnailUrl(this.id, "preview"),
-        isVideo = this.type.equals("VIDEO", ignoreCase = true))
+        isVideo = this.type.equals("VIDEO", ignoreCase = true),
+        imageOnly = true)
 }
 
 fun Asset.isHiddenByTag(): Boolean =

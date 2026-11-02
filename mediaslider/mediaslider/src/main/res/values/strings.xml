@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name" translatable="false">MediaSlider</string>
-    <string name="font_family" translatable="false">sans-serif-light</string>
 
     <string name="album_name">Album Name</string>
     <string name="camera">Camera Model</string>

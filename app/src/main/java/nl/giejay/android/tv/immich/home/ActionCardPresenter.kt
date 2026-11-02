@@ -10,7 +10,6 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.widget.TextViewCompat
 import androidx.leanback.widget.Presenter
 import nl.giejay.android.tv.immich.R
 
@@ -47,17 +46,8 @@ class ActionCardPresenter : Presenter() {
         val context = view.context
         val action = item as HomeAction
         view.text = when (action) {
-            HomeAction.Search -> context.getString(R.string.home_search_hint)
-            is HomeAction.Section -> action.title
             is HomeAction.Retry -> action.message
         }
-        view.layoutParams = view.layoutParams.apply {
-            width = context.dp(if (action is HomeAction.Section) SECTION_CARD_WIDTH_DP else WIDE_CARD_WIDTH_DP)
-        }
-        view.setCompoundDrawablesRelativeWithIntrinsicBounds(
-            if (action is HomeAction.Search) android.R.drawable.ic_menu_search else 0, 0, 0, 0
-        )
-        TextViewCompat.setCompoundDrawableTintList(view, textColors(context))
     }
 
     override fun onUnbindViewHolder(viewHolder: ViewHolder) {

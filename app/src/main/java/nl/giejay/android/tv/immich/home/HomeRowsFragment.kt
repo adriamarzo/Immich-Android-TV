@@ -2,7 +2,13 @@ package nl.giejay.android.tv.immich.home
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.leanback.app.BrowseSupportFragment
@@ -20,6 +26,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
 import arrow.core.Either
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,8 +54,12 @@ import nl.giejay.mediaslider.util.LoadMore
 import nl.giejay.mediaslider.util.LoadMoreResult
 import nl.giejay.mediaslider.viewmodel.MediaSliderViewModel
 import timber.log.Timber
+import java.util.Locale
+import java.util.TimeZone
 
 private const val LATEST_PAGE_SIZE = 20
+private const val HERO_DEBOUNCE_MILLIS = 300L
+private const val HERO_FADE_MILLIS = 250
 private val CONTENT_ROWS = listOf(ROW_LATEST, ROW_TRIPS, ROW_PEOPLE)
 
 private val ROW_ITEM_DIFF = object : DiffCallback<Any>() {
@@ -55,12 +67,14 @@ private val ROW_ITEM_DIFF = object : DiffCallback<Any>() {
     override fun areContentsTheSame(oldItem: Any, newItem: Any) = oldItem == newItem
 }
 
-/** The home screen: a search card, then rows of content that load and fail independently. */
+/** The home screen: a menu, a large photo of what is selected, and rows that load and fail independently. */
 class HomeRowsFragment : BrowseSupportFragment() {
     private data class RowFocus(val rowKey: String, val itemIndex: Int)
 
     private val sliderViewModel: MediaSliderViewModel by activityViewModels()
-    private val rowsAdapter = ArrayObjectAdapter(ListRowPresenter(FocusHighlight.ZOOM_FACTOR_SMALL))
+    private val rowsAdapter = ArrayObjectAdapter(
+        ListRowPresenter(FocusHighlight.ZOOM_FACTOR_SMALL).apply { shadowEnabled = false }
+    )
     private val rows = mutableMapOf<String, ListRow>()
     private val rowJobs = mutableMapOf<String, Job>()
     private val rowLoadedAt = mutableMapOf<String, Long>()
@@ -70,7 +84,11 @@ class HomeRowsFragment : BrowseSupportFragment() {
     @Volatile
     private var excludedAssetIds: Set<String> = emptySet()
     private var excludedAssetIdsFor: Set<String>? = null
-    private var focus = RowFocus(ROW_SEARCH, 0)
+    private var focus = RowFocus(ROW_LATEST, 0)
+    private var initialFocusPlaced = false
+    private val heroHandler = Handler(Looper.getMainLooper())
+    private var heroImage: ImageView? = null
+    private var heroLineView: TextView? = null
 
     // A new view selects its first row before focus is restored; that must not overwrite [focus].
     private var restoreFocusPending = false
@@ -81,19 +99,9 @@ class HomeRowsFragment : BrowseSupportFragment() {
         headersState = HEADERS_DISABLED
         isHeadersTransitionOnBackEnabled = false
         super.onCreate(savedInstanceState)
-        title = ""
-        showTitle(false)
         brandColor = ContextCompat.getColor(requireContext(), R.color.black)
         itemPresenters = HomeItemPresenterSelector(requireContext())
 
-        addRow(ROW_SEARCH, null, listOf(HomeAction.Search))
-        addRow(
-            ROW_MORE, getString(R.string.home_more), listOf(
-                HomeAction.Section(SECTION_TIMELINE, getString(R.string.timeline)),
-                HomeAction.Section(SECTION_ALBUMS, getString(R.string.albums)),
-                HomeAction.Section(SECTION_SETTINGS, getString(R.string.settings))
-            )
-        )
         adapter = rowsAdapter
 
         onItemViewClickedListener = OnItemViewClickedListener { _, item, _, _ -> onItemClicked(item) }
@@ -102,13 +110,70 @@ class HomeRowsFragment : BrowseSupportFragment() {
             if (!restoreFocusPending && item != null && rowKey != null) {
                 focus = RowFocus(rowKey, (row as ListRow).items().indexOf(item).coerceAtLeast(0))
             }
+            // Only over the first row: lower ones scroll to where the menu is.
+            titleView?.visibility = if (row != null && rowsAdapter.indexOf(row) > 0) View.INVISIBLE else View.VISIBLE
+            scheduleHero(item)
         })
     }
 
+    // The root is opaque, so that a background left by a section's BackgroundManager does not show through.
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val root = inflater.inflate(R.layout.fragment_home_rows, container, false) as ViewGroup
+        heroImage = root.findViewById(R.id.home_hero_image)
+        heroLineView = root.findViewById(R.id.home_hero_line)
+        root.addView(super.onCreateView(inflater, root, savedInstanceState))
+        return root
+    }
+
+    override fun onInflateTitleView(inflater: LayoutInflater, parent: ViewGroup?, savedInstanceState: Bundle?): View =
+        inflater.inflate(R.layout.home_nav_bar, parent, false)
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // Opaque, so that a background left by a section's BackgroundManager does not show through.
-        view.setBackgroundColor(ContextCompat.getColor(view.context, R.color.black))
+        view.findViewById<View>(R.id.nav_home).isActivated = true
+        view.findViewById<View>(R.id.nav_home).setOnClickListener { rowsSupportFragment?.verticalGridView?.requestFocus() }
+        view.findViewById<View>(R.id.nav_timeline).setOnClickListener { openSection(SECTION_TIMELINE) }
+        view.findViewById<View>(R.id.nav_albums).setOnClickListener { openSection(SECTION_ALBUMS) }
+        view.findViewById<View>(R.id.nav_settings).setOnClickListener { openSection(SECTION_SETTINGS) }
+        view.findViewById<View>(R.id.nav_search).setOnClickListener {
+            navigate(HomeRowsFragmentDirections.actionGlobalSearch())
+        }
+    }
+
+    private fun openSection(key: String) = navigate(HomeRowsFragmentDirections.actionGlobalHomeSection(key))
+
+    /** Debounced: moving along a row should not load a large photo for every card it passes. */
+    private fun scheduleHero(item: Any?) {
+        heroHandler.removeCallbacksAndMessages(null)
+        heroHandler.postDelayed({ showHero(item) }, HERO_DEBOUNCE_MILLIS)
+    }
+
+    private fun showHero(item: Any?) {
+        val image = heroImage ?: return
+        val photo = when (item) {
+            is HomeCardItem.AssetItem -> {
+                val exif = item.asset.exifInfo
+                heroLineView?.text = heroLine(
+                    exif?.city,
+                    exif?.dateTimeOriginal ?: item.asset.fileCreatedAt,
+                    Locale.getDefault(),
+                    TimeZone.getDefault()
+                )
+                ApiUtil.getThumbnailUrl(item.asset.id, "preview")
+            }
+            is HomeCardItem.TripItem -> {
+                heroLineView?.text = item.trip.title
+                ApiUtil.getThumbnailUrl(item.trip.thumbnailAssetId, "preview")
+            }
+            else -> {
+                // A portrait is too small to fill this space: the last photo stays.
+                heroLineView?.text = ""
+                return
+            }
+        }
+        Glide.with(this).load(photo).centerCrop()
+            .transition(DrawableTransitionOptions.withCrossFade(HERO_FADE_MILLIS))
+            .into(image)
     }
 
     override fun onStart() {
@@ -131,6 +196,9 @@ class HomeRowsFragment : BrowseSupportFragment() {
 
     override fun onDestroyView() {
         restoreFocusPending = true
+        heroHandler.removeCallbacksAndMessages(null)
+        heroImage = null
+        heroLineView = null
         super.onDestroyView()
     }
 
@@ -138,6 +206,8 @@ class HomeRowsFragment : BrowseSupportFragment() {
         if (rowJobs[key]?.isActive == true) return
         rowJobs[key] = viewLifecycleOwner.lifecycleScope.launch {
             val content = withContext(Dispatchers.IO) { fetchRow(key) }
+            // The first row goes in first, so that the initial focus lands on it and not on a faster one.
+            if (key != ROW_LATEST) rowJobs[ROW_LATEST]?.join()
             // Not stamped on failure, so the next start tries again.
             if (content !is RowContent.Failed) rowLoadedAt[key] = System.currentTimeMillis()
             showRow(key, if (key == ROW_LATEST) keepLoadedItemsOnFailure(loadedLatestItems(), content) else content)
@@ -218,13 +288,19 @@ class HomeRowsFragment : BrowseSupportFragment() {
         else ListRow(HeaderItem(HOME_ROW_ORDER.indexOf(key).toLong(), title), itemsAdapter)
         rowsAdapter.add(rowInsertIndex(HOME_ROW_ORDER, rows.keys, key), row)
         rows[key] = row
+        if (!initialFocusPlaced) {
+            initialFocusPlaced = true
+            view?.post { rowsSupportFragment?.verticalGridView?.requestFocus() }
+        }
     }
 
     private fun removeRow(key: String) {
         val row = rows.remove(key) ?: return
         val position = rowsAdapter.indexOf(row)
         rowsAdapter.remove(row)
-        if (focus.rowKey == key) {
+        if (focus.rowKey == key && rows.isEmpty()) {
+            titleView?.requestFocus()
+        } else if (focus.rowKey == key) {
             val next = HOME_ROW_ORDER.filter { it in rows.keys }[position.coerceAtMost(rows.size - 1)]
             moveFocusTo(next, 0)
         }
@@ -253,8 +329,6 @@ class HomeRowsFragment : BrowseSupportFragment() {
 
     private fun onItemClicked(item: Any?) {
         when (item) {
-            HomeAction.Search -> navigate(HomeRowsFragmentDirections.actionGlobalSearch())
-            is HomeAction.Section -> navigate(HomeRowsFragmentDirections.actionGlobalHomeSection(item.key))
             is HomeAction.Retry -> loadRow(item.rowKey)
             is HomeCardItem.AssetItem -> openAsset(item)
             is HomeCardItem.TripItem -> navigate(
@@ -316,11 +390,15 @@ class HomeRowsFragment : BrowseSupportFragment() {
     private class HomeItemPresenterSelector(context: Context) : PresenterSelector() {
         private val cardPresenter = HomeCardPresenter(context)
         private val actionPresenter = ActionCardPresenter()
+        private val personPresenter = PersonCardPresenter()
 
-        override fun getPresenter(item: Any?): Presenter =
-            if (item is HomeAction) actionPresenter else cardPresenter
+        override fun getPresenter(item: Any?): Presenter = when (item) {
+            is HomeAction -> actionPresenter
+            is HomeCardItem.PersonItem -> personPresenter
+            else -> cardPresenter
+        }
 
-        override fun getPresenters(): Array<Presenter> = arrayOf(cardPresenter, actionPresenter)
+        override fun getPresenters(): Array<Presenter> = arrayOf(cardPresenter, actionPresenter, personPresenter)
     }
 
     private class HomeCardPresenter(context: Context) : CardPresenter(context) {

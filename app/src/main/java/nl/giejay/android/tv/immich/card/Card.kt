@@ -7,4 +7,7 @@ data class Card(
     override val thumbnailUrl: String?,
     override val backgroundUrl: String?,
     override var selected: Boolean = false,
-    val isVideo: Boolean = false) : ICard
+    val isVideo: Boolean = false,
+    val imageOnly: Boolean = false) : ICard {
+    fun showsInfo(): Boolean = !imageOnly
+}

@@ -3,4 +3,7 @@
     <item name="timeline_mosaic_cell_asset_id" type="id" />
     <item name="timeline_mosaic_cell_day_key" type="id" />
     <item name="timeline_memory_id" type="id" />
+    <item name="person_avatar" type="id" />
+    <item name="person_name" type="id" />
+    <item name="card_focus_ring_layer" type="id" />
 </resources>

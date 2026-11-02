@@ -17,4 +17,14 @@
     <string name="search_voice">Buscar por voz</string>
     <string name="search_voice_unavailable">La búsqueda por voz no está disponible en esta tele.</string>
     <string name="landscapes">Paisajes</string>
+    <string name="home_nav_home">Inicio</string>
+    <string name="server">Servidor</string>
+    <string name="view_settings">Visualización</string>
+    <string name="screensaver">Salvapantallas</string>
+    <string name="home_screen_channels">Canales de inicio</string>
+    <string name="debug">Depuración</string>
+    <plurals name="album_photo_count">
+        <item quantity="one">%d foto</item>
+        <item quantity="other">%d fotos</item>
+    </plurals>
 </resources>

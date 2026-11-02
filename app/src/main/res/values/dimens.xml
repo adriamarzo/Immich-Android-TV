@@ -90,4 +90,7 @@
     -->
     <dimen name="timeline_memories_end_clearance">56dp</dimen>
     <dimen name="timeline_memories_horizontal_margin">8dp</dimen>
+    <dimen name="home_rows_margin_top">228dp</dimen>
+    <dimen name="home_hero_height">380dp</dimen>
+    <dimen name="person_avatar_size">74dp</dimen>
 </resources>

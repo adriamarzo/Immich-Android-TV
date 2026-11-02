@@ -9,7 +9,7 @@
         android:elevation="10dp"
         android:ellipsize="end"
         android:text="Not set"
-        android:fontFamily="@string/font_family"
+        android:fontFamily="@font/figtree"
         android:layout_alignParentRight="false"
         android:paddingRight="30dp"
         android:paddingLeft="30dp"

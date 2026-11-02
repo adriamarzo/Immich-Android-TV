@@ -23,6 +23,10 @@
         <item name="android:textColor">@color/default_text_color</item>
         <item name="android:textColorPrimary">@color/default_text_color</item>
         <item name="android:textColorSecondary">@color/default_text_color_secondary</item>
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="fontFamily">@font/figtree</item>
+        <item name="browseRowsMarginTop">@dimen/home_rows_margin_top</item>
+        <item name="rowHeaderStyle">@style/HomeRowHeader</item>
     </style>
 
     <!-- Theme for card views that show a Video -->

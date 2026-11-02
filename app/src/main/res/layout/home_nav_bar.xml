@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<nl.giejay.android.tv.immich.home.HomeNavBar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="40dp"
+    android:paddingTop="24dp"
+    android:paddingEnd="40dp"
+    android:paddingBottom="8dp">
+
+    <TextView android:id="@+id/nav_home" style="@style/HomeNavItem" android:text="@string/home_nav_home" />
+    <TextView android:id="@+id/nav_timeline" style="@style/HomeNavItem" android:text="@string/timeline" />
+    <TextView android:id="@+id/nav_albums" style="@style/HomeNavItem" android:text="@string/albums" />
+    <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+    <ImageView android:id="@+id/nav_search" style="@style/HomeNavIcon" android:contentDescription="@string/home_search_hint" android:src="@drawable/ic_nav_search" />
+    <ImageView android:id="@+id/nav_settings" style="@style/HomeNavIcon" android:contentDescription="@string/settings" android:src="@drawable/ic_nav_settings" />
+</nl.giejay.android.tv.immich.home.HomeNavBar>

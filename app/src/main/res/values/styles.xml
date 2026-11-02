@@ -204,9 +204,54 @@
         <item name="cardBackground">@null</item>
     </style>
 
+    <style name="DefaultCardTitleStyle" parent="Widget.Leanback.ImageCardView.TitleStyle">
+        <item name="android:fontFamily">@font/figtree_semibold</item>
+        <item name="android:textColor">@color/screen_white</item>
+    </style>
+
+    <style name="DefaultCardContentStyle" parent="Widget.Leanback.ImageCardView.ContentStyle">
+        <item name="android:fontFamily">@font/figtree</item>
+        <item name="android:textColor">@color/screen_white_70</item>
+    </style>
+
     <style name="DefaultCardTheme" parent="Theme.Leanback">
         <item name="imageCardViewStyle">@style/DefaultCardStyle</item>
         <item name="imageCardViewImageStyle">@style/DefaultCardImageStyle</item>
+        <item name="imageCardViewTitleStyle">@style/DefaultCardTitleStyle</item>
+        <item name="imageCardViewContentStyle">@style/DefaultCardContentStyle</item>
+    </style>
+
+    <style name="HomeRowHeader" parent="Widget.Leanback.Row.Header">
+        <item name="android:fontFamily">@font/figtree_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/screen_white</item>
+    </style>
+
+    <style name="HomeNavItem">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:layout_marginEnd">6dp</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/nav_item_background</item>
+        <item name="android:textColor">@color/nav_item_text</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">@font/figtree_semibold</item>
+    </style>
+
+    <style name="HomeNavIcon">
+        <item name="android:layout_width">28dp</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:layout_marginStart">6dp</item>
+        <item name="android:padding">6dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:background">@drawable/nav_item_background</item>
+        <item name="android:tint">@color/nav_item_text</item>
     </style>
 
     <!-- Timeline rows: thumbnail only, no title/content footer. -->

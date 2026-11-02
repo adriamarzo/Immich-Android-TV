@@ -243,11 +243,11 @@ data object SLIDER_SHOW_MEDIA_COUNT : BooleanPref(true,
     ImmichApplication.appContext!!.getString(R.string.show_media_count_slideshow),
     ImmichApplication.appContext!!.getString(R.string.show_media_count_slideshow_desc))
 
-data object SLIDER_SHOW_DATE : BooleanPref(false,
+data object SLIDER_SHOW_DATE : BooleanPref(true,
     ImmichApplication.appContext!!.getString(R.string.show_date_slideshow),
     ImmichApplication.appContext!!.getString(R.string.show_date_slideshow_desc))
 
-data object SLIDER_SHOW_DATE_TOP_LEFT : BooleanPref(true,
+data object SLIDER_SHOW_DATE_TOP_LEFT : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.show_date_top_left),
     ImmichApplication.appContext!!.getString(R.string.show_date_top_left_viewer_desc))
 
@@ -432,7 +432,7 @@ data object DEBUG_MODE : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.enable_debug_mode),
     ImmichApplication.appContext!!.getString(R.string.enable_debug_mode_desc))
 
-data object LOAD_BACKGROUND_IMAGE : BooleanPref(true,
+data object LOAD_BACKGROUND_IMAGE : BooleanPref(false,
     ImmichApplication.appContext!!.getString(R.string.load_selected_item_as_background),
     ImmichApplication.appContext!!.getString(R.string.load_selected_item_as_background_desc))
 

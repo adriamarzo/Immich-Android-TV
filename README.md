@@ -137,3 +137,14 @@ reports if you find any: https://github.com/giejay/Immich-Android-TV/issues/new/
 6. Execute the following command: 'adb shell settings put secure
    screensaver_components io.github.adriamarzo.immichtv/nl.giejay.android.tv.immich.screensaver.ScreenSaverService'
 7. Done!
+
+## Fonts
+
+The interface uses [Figtree](https://github.com/erikdkennedy/figtree), bundled in the app so that no font is
+downloaded at runtime. Its licence (SIL Open Font License 1.1) is in `mediaslider/mediaslider/OFL-figtree.txt`.
+
+## Landscapes screensaver
+
+The default screensaver asks your server's smart search for landscape terms and shows only landscape-format
+photos where Immich detected no face. It does not guarantee that no person ever appears: a person with no detected
+face can still come through. Add such a photo to an album excluded in the settings.

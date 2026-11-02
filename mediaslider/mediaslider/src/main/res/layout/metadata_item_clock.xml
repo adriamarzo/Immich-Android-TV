@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="10dp"
-        android:fontFamily="@string/font_family"
+        android:fontFamily="@font/figtree"
         android:paddingRight="30dp"
         android:paddingLeft="30dp"
         android:textColor="#FFFFFFFF"

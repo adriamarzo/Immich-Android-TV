@@ -7,7 +7,7 @@
     android:background="@drawable/metadata_date_scrim"
     android:elevation="10dp"
     android:ellipsize="end"
-    android:fontFamily="@string/font_family"
+    android:fontFamily="@font/figtree"
     android:gravity="start"
     android:maxLines="2"
     android:paddingStart="32dp"

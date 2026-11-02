@@ -67,9 +67,34 @@ class HomeRowsLogicTest {
 
     @Test
     fun `a row is inserted by the fixed order whatever loaded first`() {
-        assertEquals(1, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_SEARCH, ROW_MORE), ROW_PEOPLE))
-        assertEquals(1, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_SEARCH, ROW_PEOPLE, ROW_MORE), ROW_LATEST))
-        assertEquals(2, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_SEARCH, ROW_LATEST, ROW_PEOPLE, ROW_MORE), ROW_TRIPS))
+        assertEquals(0, rowInsertIndex(HOME_ROW_ORDER, emptySet(), ROW_PEOPLE))
+        assertEquals(0, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_PEOPLE), ROW_LATEST))
+        assertEquals(1, rowInsertIndex(HOME_ROW_ORDER, setOf(ROW_LATEST, ROW_PEOPLE), ROW_TRIPS))
+    }
+
+    private val october = java.util.Date(1_791_000_000_000L) // 3 Oct 2026, 03:20 UTC
+    private val utc = java.util.TimeZone.getTimeZone("UTC")
+    private val spanish = java.util.Locale("es")
+
+    @Test
+    fun `the hero line has the place and the date`() {
+        assertEquals("Menorca · 3 oct 2026", heroLine("Menorca", october, spanish, utc))
+    }
+
+    @Test
+    fun `the hero line has only the date without a place`() {
+        assertEquals("3 oct 2026", heroLine(" ", october, spanish, utc))
+        assertEquals("3 oct 2026", heroLine(null, october, spanish, utc))
+    }
+
+    @Test
+    fun `the hero line has only the place without a date`() {
+        assertEquals("Menorca", heroLine("Menorca", null, spanish, utc))
+    }
+
+    @Test
+    fun `the hero line is empty with neither`() {
+        assertEquals("", heroLine(null, null, spanish, utc))
     }
 
     @Test
