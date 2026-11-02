@@ -26,6 +26,8 @@ object GuidedStepUtil {
                 .title(title)
                 .descriptionEditable(true)
                 .descriptionInputType(inputType)
+                // Leanback uses this one while editing; its default is plain text.
+                .descriptionEditInputType(inputType)
                 .description(desc)
                 .build()
         )
