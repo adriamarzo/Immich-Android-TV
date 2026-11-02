@@ -5,6 +5,10 @@
     <string name="home_trips">Viajes</string>
     <string name="home_people">Personas</string>
     <string name="home_more">Más</string>
+    <string name="timeline">Cronología</string>
+    <string name="albums">Álbumes</string>
+    <string name="folders">Carpetas</string>
+    <string name="settings">Ajustes</string>
     <string name="home_server_unreachable">No se puede conectar con el servidor. Comprueba que estás en casa o conectado a la VPN.</string>
     <string name="home_row_failed">No se ha podido cargar esta fila. Pulsa para reintentar.</string>
     <string name="search_no_results">No se han encontrado fotos. Prueba con otras palabras o en inglés.</string>
