@@ -13,6 +13,7 @@ import nl.giejay.mediaslider.model.MetaDataType
 import nl.giejay.mediaslider.plugin.DateOverlayViewPlugin
 import nl.giejay.mediaslider.plugin.MediaRemoteControlsKeyEventPlugin
 import nl.giejay.mediaslider.plugin.MetadataViewPlugin
+import nl.giejay.mediaslider.plugin.VideoInfoPlugin
 import nl.giejay.mediaslider.plugin.SliderControllerPlugin
 import nl.giejay.mediaslider.plugin.SliderKeyEventPlugin
 import nl.giejay.mediaslider.plugin.SliderViewPlugin
@@ -186,6 +187,7 @@ object PreferenceManager {
     /**
      * Builds a fresh set of Immich slider plugins for one slider session.
      * [MetadataViewPlugin] is shared across view + controller lists.
+     * [VideoInfoPlugin] adds a button that shows the data of the video being played.
      * [DateOverlayViewPlugin] optionally renders DATE at the top of the slider.
      * [MediaRemoteControlsKeyEventPlugin] handles remote/D-pad seek and related keys.
      */
@@ -193,7 +195,7 @@ object PreferenceManager {
         val metadataPlugin = MetadataViewPlugin()
         val remoteControlsPlugin = MediaRemoteControlsKeyEventPlugin()
         return EnabledSliderPlugins(
-            controllerPlugins = listOf(metadataPlugin),
+            controllerPlugins = listOf(metadataPlugin, VideoInfoPlugin()),
             viewPlugins = listOf(metadataPlugin, DateOverlayViewPlugin()),
             keyEventPlugins = listOf(remoteControlsPlugin)
         )

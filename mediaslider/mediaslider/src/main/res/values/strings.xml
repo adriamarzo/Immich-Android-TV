@@ -26,4 +26,11 @@
     <string name="no_external_player_found">No external player found</string>
     <string name="story_progress_count">%1$d/%2$d</string>
 
+    <string name="video_info">Video details</string>
+    <string name="video_info_resolution">Resolution</string>
+    <string name="video_info_frame_rate">Frame rate</string>
+    <string name="video_info_hdr">HDR</string>
+    <string name="video_info_codec">Codec</string>
+    <string name="video_info_not_stated">Not stated</string>
+    <string name="video_info_loading">The video is still loading. Try again in a moment.</string>
 </resources>

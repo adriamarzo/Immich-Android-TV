@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="video_info">Datos del vídeo</string>
+    <string name="video_info_resolution">Resolución</string>
+    <string name="video_info_frame_rate">Fotogramas</string>
+    <string name="video_info_hdr">HDR</string>
+    <string name="video_info_codec">Códec</string>
+    <string name="video_info_not_stated">No indicado</string>
+    <string name="video_info_loading">El vídeo aún se está cargando. Vuelve a intentarlo en un momento.</string>
+</resources>
